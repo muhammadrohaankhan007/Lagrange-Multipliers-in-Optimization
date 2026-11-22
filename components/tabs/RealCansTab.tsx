@@ -1,21 +1,15 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  Download,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Trash2,
-  X,
-} from "lucide-react";
+import { AlertTriangle, Download, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { PlotlyChart } from "@/components/PlotlyChart";
+import { EngineWaitingSkeleton } from "@/components/EngineWaitingSkeleton";
 import { downloadCsv } from "@/lib/csv";
 import type { RealCanAnalysis, RealCanInput } from "@/lib/solver-client";
 
 interface RealCansTabProps {
   cans: RealCanAnalysis[];
+  engineReady: boolean;
   onAddCan: (can: Omit<RealCanInput, "id">) => void;
   onEditCan: (can: RealCanInput) => void;
   onDeleteCan: (id: string) => void;
@@ -53,6 +47,7 @@ function computeVolumeMismatchPct(diameterCm: number, heightCm: number, statedVo
 
 export function RealCansTab({
   cans,
+  engineReady,
   onAddCan,
   onEditCan,
   onDeleteCan,
@@ -164,21 +159,21 @@ export function RealCansTab({
         name: "Actual Can Area (cm²)",
         x: cans.map((c) => (c.isExample ? `${c.name} (Ex.)` : c.name)),
         y: cans.map((c) => Number(c.actual_area_cm2.toFixed(2))),
-        marker: { color: "#6366f1" },
+        marker: { color: "#0f766e" },
       },
       {
         type: "bar",
         name: "Shape-Only Optimum (Geom. V, cm²)",
         x: cans.map((c) => (c.isExample ? `${c.name} (Ex.)` : c.name)),
         y: cans.map((c) => Number(c.optimal_area_geom_cm2.toFixed(2))),
-        marker: { color: "#0ea5e9" },
+        marker: { color: "#0284c7" },
       },
       {
         type: "bar",
         name: "Stated-Volume Optimum (cm²)",
         x: cans.map((c) => (c.isExample ? `${c.name} (Ex.)` : c.name)),
         y: cans.map((c) => Number(c.optimal_area_cm2.toFixed(2))),
-        marker: { color: "#10b981" },
+        marker: { color: "#64748b" },
       },
     ];
   }, [cans]);
@@ -218,39 +213,41 @@ export function RealCansTab({
     );
   };
 
+  if (!engineReady) {
+    return <EngineWaitingSkeleton title="Waiting for the math engine…" />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Add / Edit Can Form */}
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4"
+        className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Real Cans Comparison
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
+            <h2 className="text-lg font-semibold text-[#0f172a]">Real Cans Comparison</h2>
+            <p className="text-xs text-[#475569] mt-0.5">
               Saved in browser <code className="font-mono">localStorage</code>. Built-in rows are
               clearly marked as <strong>Example data, not measured</strong> and excluded from CSV
               exports unless you opt in.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <label className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+            <label className="inline-flex items-center gap-1.5 text-xs text-[#334155] cursor-pointer">
               <input
                 type="checkbox"
                 checked={includeExamplesInExport}
                 onChange={(e) => setIncludeExamplesInExport(e.target.checked)}
-                className="rounded border-slate-300 accent-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="rounded border-[#cbd5e1] accent-[#0f766e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
               />
               Include example cans in CSV
             </label>
             <button
               type="button"
               onClick={onResetDefaults}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
               Restore Examples
@@ -264,7 +261,7 @@ export function RealCansTab({
                   ? "Add a user can or check 'Include example cans in CSV' to export"
                   : `Export ${exportableCans.length} can(s) to CSV`
               }
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors disabled:opacity-45"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors disabled:opacity-45"
             >
               <Download className="w-3.5 h-3.5" aria-hidden="true" />
               CSV ({exportableCans.length})
@@ -274,10 +271,7 @@ export function RealCansTab({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
           <div className="lg:col-span-2">
-            <label
-              htmlFor="can-name-input"
-              className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
-            >
+            <label htmlFor="can-name-input" className="block text-xs font-medium text-[#334155] mb-1">
               {editingId ? "Editing Can Name" : "Can Name"}
             </label>
             <input
@@ -286,13 +280,13 @@ export function RealCansTab({
               placeholder="e.g., Cola 330 mL (Measured)"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="w-full rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-sm text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
             />
           </div>
           <div>
             <label
               htmlFor="can-diameter-input"
-              className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-xs font-medium text-[#334155] mb-1"
             >
               Diameter d (cm)
             </label>
@@ -304,13 +298,13 @@ export function RealCansTab({
               max="100"
               value={diameter}
               onChange={(e) => setDiameter(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="w-full rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-sm font-mono tabular-nums text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
             />
           </div>
           <div>
             <label
               htmlFor="can-height-input"
-              className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-xs font-medium text-[#334155] mb-1"
             >
               Height h (cm)
             </label>
@@ -322,14 +316,14 @@ export function RealCansTab({
               max="200"
               value={height}
               onChange={(e) => setHeight(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="w-full rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-sm font-mono tabular-nums text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
             />
           </div>
           <div className="flex gap-2 items-end">
             <div className="flex-1">
               <label
                 htmlFor="can-volume-input"
-                className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+                className="block text-xs font-medium text-[#334155] mb-1"
               >
                 Volume (cm³ / mL)
               </label>
@@ -341,12 +335,12 @@ export function RealCansTab({
                 max="100000"
                 value={volume}
                 onChange={(e) => setVolume(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="w-full rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-sm font-mono tabular-nums text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
               />
             </div>
             <button
               type="submit"
-              className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+              className="inline-flex items-center gap-1 rounded-lg bg-[#0f766e] hover:bg-[#115e59] text-white px-3.5 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] focus-visible:ring-offset-2 transition-colors"
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
               {editingId ? "Save" : "Add"}
@@ -356,7 +350,7 @@ export function RealCansTab({
                 type="button"
                 onClick={resetForm}
                 aria-label="Cancel editing"
-                className="p-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="p-2 rounded-lg border border-[#cbd5e1] text-[#475569] hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -365,16 +359,16 @@ export function RealCansTab({
         </div>
 
         {formError && (
-          <p role="alert" className="text-xs text-rose-600 dark:text-rose-400">
+          <p role="alert" className="text-xs text-[#b91c1c]">
             {formError}
           </p>
         )}
         {formMismatchWarning && (
           <div
             role="status"
-            className="rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 flex items-start gap-2 text-xs text-amber-900 dark:text-amber-200"
+            className="rounded-lg border border-amber-200 bg-[#fffbeb] px-3 py-2 flex items-start gap-2 text-xs text-[#b45309]"
           >
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
             <span>{formMismatchWarning}</span>
           </div>
         )}
@@ -382,158 +376,155 @@ export function RealCansTab({
 
       {/* Empty State or Table */}
       {cans.length === 0 && !loading ? (
-        <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center space-y-3">
-          <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+        <div className="rounded-xl border border-dashed border-[#cbd5e1] bg-white p-8 text-center space-y-3">
+          <p className="text-sm font-medium text-[#0f172a]">
             No cans in the comparison table yet.
           </p>
-          <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+          <p className="text-xs text-[#475569] max-w-md mx-auto">
             Enter a real can&apos;s diameter (cm), height (cm), and stated volume (cm³) using the
-            form above, capture heights from the optional <code className="font-mono">/hardware</code>{" "}
-            page, or restore the built-in example cans.
+            form above, capture heights from the optional{" "}
+            <code className="font-mono">/hardware</code> page, or restore the built-in example cans.
           </p>
           <button
             type="button"
             onClick={onResetDefaults}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 text-xs font-semibold transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0f766e] hover:bg-[#115e59] text-white px-3.5 py-2 text-xs font-medium transition-colors"
           >
             <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
             Restore Example Cans
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="rounded-xl border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+          <div className="overflow-x-auto max-h-[520px]">
             <table className="w-full min-w-[1060px] text-left text-xs sm:text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+              <thead className="sticky top-0 z-10 bg-[#f8fafc] border-b border-[#e2e8f0] text-[#334155]">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Can &amp; Source</th>
-                  <th className="px-3 py-3 font-semibold font-mono">d (cm)</th>
-                  <th className="px-3 py-3 font-semibold font-mono">h (cm)</th>
-                  <th className="px-3 py-3 font-semibold font-mono">Geom. V (cm³)</th>
-                  <th className="px-3 py-3 font-semibold font-mono">Stated V (cm³)</th>
-                  <th className="px-3 py-3 font-semibold font-mono">h/d (opt=1)</th>
-                  <th className="px-3 py-3 font-semibold font-mono">Actual Area (cm²)</th>
-                  <th className="px-3 py-3 font-semibold font-mono text-sky-700 dark:text-sky-300">
+                  <th className="px-3 py-3 font-semibold font-mono text-right">d (cm)</th>
+                  <th className="px-3 py-3 font-semibold font-mono text-right">h (cm)</th>
+                  <th className="px-3 py-3 font-semibold font-mono text-right">Geom. V (cm³)</th>
+                  <th className="px-3 py-3 font-semibold font-mono text-right">Stated V (cm³)</th>
+                  <th className="px-3 py-3 font-semibold font-mono text-right">h/d (opt=1)</th>
+                  <th className="px-3 py-3 font-semibold font-mono text-right">Actual (cm²)</th>
+                  <th className="px-3 py-3 font-semibold font-mono text-right text-[#0369a1]">
                     Shape-Only Opt. (cm²)
                   </th>
-                  <th className="px-3 py-3 font-semibold font-mono text-sky-700 dark:text-sky-300">
+                  <th className="px-3 py-3 font-semibold font-mono text-right text-[#0369a1]">
                     Shape Excess (%)
                   </th>
-                  <th className="px-3 py-3 font-semibold font-mono text-emerald-700 dark:text-emerald-300">
+                  <th className="px-3 py-3 font-semibold font-mono text-right text-[#0f766e]">
                     Stated-V Opt. (cm²)
                   </th>
-                  <th className="px-3 py-3 font-semibold font-mono text-emerald-700 dark:text-emerald-300">
+                  <th className="px-3 py-3 font-semibold font-mono text-right text-[#0f766e]">
                     Stated-V Excess (%)
                   </th>
                   <th className="px-4 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                {loading && cans.length === 0 ? (
-                  <tr>
-                    <td colSpan={12} className="px-4 py-6 text-center text-slate-500">
-                      Computing optimal areas in Pyodide...
-                    </td>
-                  </tr>
-                ) : (
-                  cans.map((c) => {
-                    const mismatchPct = computeVolumeMismatchPct(
-                      c.diameter_cm,
-                      c.height_cm,
-                      c.stated_volume_ml
-                    );
-                    const hasVolumeWarning = mismatchPct > 0.1;
-                    return (
-                      <tr
-                        key={c.id}
-                        className={`transition-colors ${
-                          c.isExample
-                            ? "bg-slate-50/70 dark:bg-slate-900/50 hover:bg-slate-100/70 dark:hover:bg-slate-800/40"
-                            : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                        }`}
-                      >
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-slate-900 dark:text-slate-100">
-                            {c.name}
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                            {c.isExample ? (
-                              <span className="inline-flex rounded-full bg-slate-200 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300">
-                                Example data, not measured
-                              </span>
-                            ) : (
-                              <span className="inline-flex rounded-full bg-indigo-100 dark:bg-indigo-950 px-2 py-0.5 text-[10px] font-semibold text-indigo-800 dark:text-indigo-300">
-                                User entry
-                              </span>
-                            )}
-                            {hasVolumeWarning && (
-                              <span
-                                title={`Cylinder volume πd²h/4 = ${c.geometric_volume_cm3.toFixed(
-                                  1
-                                )} cm³ differs from stated ${c.stated_volume_ml} cm³ by ${(
-                                  mismatchPct * 100
-                                ).toFixed(1)}%.`}
-                                className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-300"
-                              >
-                                <AlertTriangle className="w-2.5 h-2.5" aria-hidden="true" />
-                                πd²h/4 ≠ V ({(mismatchPct * 100).toFixed(0)}%)
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 font-mono">{c.diameter_cm.toFixed(2)}</td>
-                        <td className="px-3 py-3 font-mono">{c.height_cm.toFixed(2)}</td>
-                        <td className="px-3 py-3 font-mono text-slate-600 dark:text-slate-400">
-                          {c.geometric_volume_cm3.toFixed(1)}
-                        </td>
-                        <td className="px-3 py-3 font-mono">{c.stated_volume_ml}</td>
-                        <td className="px-3 py-3 font-mono">{c.h_over_d.toFixed(2)}</td>
-                        <td className="px-3 py-3 font-mono">{c.actual_area_cm2.toFixed(2)}</td>
-                        <td className="px-3 py-3 font-mono text-sky-700 dark:text-sky-400">
-                          {c.optimal_area_geom_cm2.toFixed(2)}
-                        </td>
-                        <td className="px-3 py-3 font-mono font-semibold text-sky-700 dark:text-sky-400">
-                          {c.percent_excess_geom >= 0 ? "+" : ""}
-                          {c.percent_excess_geom.toFixed(2)}%
-                        </td>
-                        <td className="px-3 py-3 font-mono text-emerald-700 dark:text-emerald-400">
-                          {c.optimal_area_cm2.toFixed(2)}
-                        </td>
-                        <td className="px-3 py-3 font-mono font-semibold text-amber-700 dark:text-amber-400">
-                          {c.percent_excess >= 0 ? "+" : ""}
-                          {c.percent_excess.toFixed(2)}%
-                        </td>
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => handleStartEdit(c)}
-                            aria-label={`Edit ${c.name}`}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors mr-1"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDeleteCan(c.id)}
-                            aria-label={`Delete ${c.name}`}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
+              <tbody className="divide-y divide-[#e2e8f0]">
+                {cans.map((c) => {
+                  const mismatchPct = computeVolumeMismatchPct(
+                    c.diameter_cm,
+                    c.height_cm,
+                    c.stated_volume_ml
+                  );
+                  const hasVolumeWarning = mismatchPct > 0.1;
+                  return (
+                    <tr
+                      key={c.id}
+                      className="even:bg-[#f8fafc] hover:bg-[#f1f5f9]/70 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-[#0f172a]">{c.name}</div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          {c.isExample ? (
+                            <span className="inline-flex rounded-full bg-[#f1f5f9] border border-[#cbd5e1] px-2 py-0.5 text-[10px] font-medium text-[#475569]">
+                              Example data, not measured
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-[#f0fdfa] border border-[#0f766e]/25 px-2 py-0.5 text-[10px] font-medium text-[#0f766e]">
+                              User entry
+                            </span>
+                          )}
+                          {hasVolumeWarning && (
+                            <span
+                              title={`Cylinder volume πd²h/4 = ${c.geometric_volume_cm3.toFixed(
+                                1
+                              )} cm³ differs from stated ${c.stated_volume_ml} cm³ by ${(
+                                mismatchPct * 100
+                              ).toFixed(1)}%.`}
+                              className="inline-flex items-center gap-1 rounded-full bg-[#fffbeb] border border-amber-200 px-2 py-0.5 text-[10px] font-medium text-[#b45309]"
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5" aria-hidden="true" />
+                              πd²h/4 ≠ V ({(mismatchPct * 100).toFixed(0)}%)
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right">
+                        {c.diameter_cm.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right">
+                        {c.height_cm.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right text-[#475569]">
+                        {c.geometric_volume_cm3.toFixed(1)}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right">
+                        {c.stated_volume_ml}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right">
+                        {c.h_over_d.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right">
+                        {c.actual_area_cm2.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right text-[#0369a1]">
+                        {c.optimal_area_geom_cm2.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right font-semibold text-[#0369a1]">
+                        {c.percent_excess_geom >= 0 ? "+" : ""}
+                        {c.percent_excess_geom.toFixed(2)}%
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right text-[#0f766e]">
+                        {c.optimal_area_cm2.toFixed(2)}
+                      </td>
+                      <td className="px-3 py-3 font-mono tabular-nums text-right font-semibold text-[#b45309]">
+                        {c.percent_excess >= 0 ? "+" : ""}
+                        {c.percent_excess.toFixed(2)}%
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEdit(c)}
+                          aria-label={`Edit ${c.name}`}
+                          className="p-1.5 rounded-lg text-[#475569] hover:text-[#0f766e] hover:bg-[#f0fdfa] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors mr-1"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteCan(c.id)}
+                          aria-label={`Delete ${c.name}`}
+                          className="p-1.5 rounded-lg text-[#475569] hover:text-[#b91c1c] hover:bg-[#fef2f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91c1c] transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 text-xs text-slate-700 dark:text-slate-300">
-            <strong>Comparing the two columns:</strong> The <em>Shape-Only</em> comparison uses the
-            measured geometric cylinder volume (<code className="font-mono">πd²h/4</code>) to
-            isolate the penalty of the can&apos;s non-optimal proportions alone, whereas the{" "}
-            <em>Stated-Volume</em> comparison benchmarks against the labelled drink volume and
-            therefore also reflects headspace, domed base, rim seam, and wall thickness.
+          <div className="px-5 py-3 border-t border-[#e2e8f0] bg-[#f8fafc] text-xs text-[#334155]">
+            <strong className="text-[#0f172a]">Comparing the two columns:</strong> The{" "}
+            <em>Shape-Only</em> comparison uses the measured geometric cylinder volume (
+            <code className="font-mono">πd²h/4</code>) to isolate the penalty of the can&apos;s
+            non-optimal proportions alone, whereas the <em>Stated-Volume</em> comparison benchmarks
+            against the labelled drink volume and therefore also reflects headspace, domed base,
+            rim seam, and wall thickness.
           </div>
         </div>
       )}
@@ -543,9 +534,9 @@ export function RealCansTab({
         <div className="xl:col-span-2">
           {cans.length > 0 && (
             <PlotlyChart
-              title="Actual Surface Area vs SymPy Optimal Area"
-              subtitle="Comparing each can against an ideal h = d cylinder of the same stated volume."
-              ariaLabel="Grouped bar chart comparing actual surface area against optimal surface area in square centimeters for each can"
+              title="Actual Surface Area vs Shape-Only & Stated-Volume Optima"
+              subtitle="Comparing each can against an ideal h = d cylinder for both geometric volume and stated volume."
+              ariaLabel="Grouped bar chart comparing actual surface area against shape-only and stated-volume optimal surface area in square centimeters"
               takeaway="Commercial beverage cans consistently use more surface area than the pure h = d optimum because they are taller and slimmer."
               data={barChartData}
               layout={{
@@ -559,26 +550,22 @@ export function RealCansTab({
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-3">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+        <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-3">
+          <h3 className="text-sm font-semibold text-[#0f172a]">
             Why Do Real Cans Differ From h = d? (Hypotheses)
           </h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            The pure calculus model assumes uniform wall thickness and a flat-ended cylinder.
-            Real manufacturing introduces competing engineering constraints:
+          <p className="text-xs text-[#475569]">
+            The pure calculus model assumes uniform wall thickness and a flat-ended cylinder. Real
+            manufacturing introduces competing engineering constraints:
           </p>
           <div className="space-y-2.5">
             {HYPOTHESES.map((item) => (
               <div
                 key={item.title}
-                className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3"
+                className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3"
               >
-                <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                  {item.title}
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
-                  {item.body}
-                </p>
+                <div className="text-xs font-semibold text-[#0f172a]">{item.title}</div>
+                <p className="text-xs text-[#475569] mt-0.5 leading-relaxed">{item.body}</p>
               </div>
             ))}
           </div>

@@ -12,7 +12,6 @@ import {
   OrbitControls,
 } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
-import { useTheme } from "@/components/ThemeProvider";
 import { heightOnConstraint } from "@/lib/gradients";
 
 export interface ScaledRealCan3D {
@@ -47,10 +46,6 @@ function isWebGLAvailable(): boolean {
   }
 }
 
-/**
- * Shared unit-sized geometries created ONCE per scene mount (zero recreation on slider updates).
- * Every can scales these unit primitives directly by exact (r, h, r).
- */
 interface SharedUnitGeometries {
   sideWall: THREE.CylinderGeometry;
   capDisc: THREE.CircleGeometry;
@@ -61,14 +56,10 @@ interface SharedUnitGeometries {
 }
 
 function createSharedUnitGeometries(): SharedUnitGeometries {
-  // Open-ended unit cylinder (radius 1, height 1, 48 segments) for crisp side wall shading
   const sideWall = new THREE.CylinderGeometry(1, 1, 1, RADIAL_SEGMENTS, 1, true);
-  // Flat unit disc (radius 1, 48 segments) for lid & base
   const capDisc = new THREE.CircleGeometry(1, RADIAL_SEGMENTS);
-  // Closed unit cylinder (radius 1, height 1) for translucent ghost interiors
   const solidCylinder = new THREE.CylinderGeometry(1, 1, 1, RADIAL_SEGMENTS, 1, false);
 
-  // Unit rim circle in XZ plane (radius 1)
   const rimPts: THREE.Vector3[] = [];
   for (let i = 0; i <= RADIAL_SEGMENTS; i++) {
     const theta = (i / RADIAL_SEGMENTS) * Math.PI * 2;
@@ -76,7 +67,6 @@ function createSharedUnitGeometries(): SharedUnitGeometries {
   }
   const rimCircle = new THREE.BufferGeometry().setFromPoints(rimPts);
 
-  // 8 sparse vertical guide lines around unit cylinder (y from 0 to 1)
   const guidePts: THREE.Vector3[] = [];
   for (let i = 0; i < GUIDE_LINE_COUNT; i++) {
     const theta = (i / GUIDE_LINE_COUNT) * Math.PI * 2;
@@ -87,7 +77,6 @@ function createSharedUnitGeometries(): SharedUnitGeometries {
   }
   const verticalGuides = new THREE.BufferGeometry().setFromPoints(guidePts);
 
-  // Single unit line segment from (0,0,0) to (1,0,0) for live dimension callouts
   const unitSegment = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(1, 0, 0),
@@ -105,7 +94,6 @@ function disposeSharedUnitGeometries(g: SharedUnitGeometries) {
   g.unitSegment.dispose();
 }
 
-/** Clean translucent ghost can: low-opacity body + top/bottom rims + 8 sparse vertical guide lines */
 function GhostCan({
   geos,
   radius,
@@ -185,7 +173,6 @@ function SceneContents({
   autoRotate,
   resetCounter,
   v0,
-  isDark,
   reducedMotion,
   pageVisible,
 }: {
@@ -198,58 +185,57 @@ function SceneContents({
   autoRotate: boolean;
   resetCounter: number;
   v0: number;
-  isDark: boolean;
   reducedMotion: boolean;
   pageVisible: boolean;
 }) {
   const { invalidate, camera } = useThree();
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
 
-  // Create unit geometries ONCE and dispose on unmount
+  // Create unit geometries ONCE on mount (zero recreation on slider updates)
   const geos = useMemo(() => createSharedUnitGeometries(), []);
   useEffect(() => {
     return () => disposeSharedUnitGeometries(geos);
   }, [geos]);
 
-  // Materials for the solid current can (brushed aluminum silver-teal, lighter lid/base, rim highlight)
+  // Light-theme brushed-aluminum silver-teal materials
   const bodyMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: isDark ? "#6db5b0" : "#5e9c98",
+        color: "#5b9a95",
         metalness: 0.72,
         roughness: 0.34,
         flatShading: false,
       }),
-    [isDark]
+    []
   );
 
   const capMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: isDark ? "#cbd5e1" : "#dbe6e5",
+        color: "#dce7e6",
         metalness: 0.65,
         roughness: 0.3,
         flatShading: false,
       }),
-    [isDark]
+    []
   );
 
   const rimMat = useMemo(
     () =>
       new THREE.LineBasicMaterial({
-        color: isDark ? "#e2e8f0" : "#f1f5f9",
+        color: "#f1f5f9",
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.92,
       }),
-    [isDark]
+    []
   );
 
   const dimLineMat = useMemo(
     () =>
       new THREE.LineBasicMaterial({
-        color: isDark ? "#94a3b8" : "#475569",
+        color: "#334155",
       }),
-    [isDark]
+    []
   );
 
   const topRim = useMemo(() => new THREE.Line(geos.rimCircle, rimMat), [geos.rimCircle, rimMat]);
@@ -272,7 +258,6 @@ function SceneContents({
     };
   }, [bodyMat, capMat, rimMat, dimLineMat]);
 
-  // Auto-fit normalization: fit the tallest AND widest can across the full slider range
   const { sceneScale, defaultCamPos, targetY } = useMemo(() => {
     const tallestH = Math.max(heightOnConstraint(minR, v0), optH, realCan?.h ?? 0);
     const widestD = Math.max(2 * maxR, 2 * optR, realCan ? 2 * realCan.r : 0);
@@ -287,7 +272,6 @@ function SceneContents({
     };
   }, [minR, maxR, optR, optH, realCan, v0]);
 
-  // Smoothly damped displayed radius (~120 ms) updated purely via transforms — no geometry recreation
   const displayedRRef = useRef<number>(targetR);
   const bodyMeshRef = useRef<THREE.Mesh | null>(null);
   const topCapRef = useRef<THREE.Mesh | null>(null);
@@ -297,7 +281,6 @@ function SceneContents({
   const hLineRef = useRef<THREE.Object3D | null>(null);
   const rLineRef = useRef<THREE.Object3D | null>(null);
 
-  // Label readout state updated smoothly at most when visibly changed
   const [labelDims, setLabelDims] = useState<{ r: number; h: number }>({
     r: targetR,
     h: heightOnConstraint(targetR, v0),
@@ -310,7 +293,6 @@ function SceneContents({
   const mainX = realCan ? -(Math.max(maxR * sceneScale, oR) + 0.55) : 0;
   const realX = realCan ? realR + 0.55 : 0;
 
-  // Apply transforms directly to Three.js objects without triggering React re-renders
   const applyCanTransforms = (rCm: number) => {
     const hCm = heightOnConstraint(rCm, v0);
     const rScene = rCm * sceneScale;
@@ -336,13 +318,11 @@ function SceneContents({
       botRimRef.current.scale.set(rScene, 1, rScene);
       botRimRef.current.position.set(mainX, 0.003, 0);
     }
-    // Vertical height annotation line slightly to the left of the current can
     if (hLineRef.current) {
       hLineRef.current.position.set(mainX - rScene - 0.35, 0, 0);
       hLineRef.current.rotation.set(0, 0, Math.PI / 2);
       hLineRef.current.scale.set(hScene, 1, 1);
     }
-    // Horizontal radius line across top lid from center to rim
     if (rLineRef.current) {
       rLineRef.current.position.set(mainX, hScene + 0.08, 0);
       rLineRef.current.rotation.set(0, 0, 0);
@@ -350,7 +330,6 @@ function SceneContents({
     }
   };
 
-  // Initial transform & immediate wake on prop changes
   useEffect(() => {
     if (reducedMotion) {
       displayedRRef.current = targetR;
@@ -360,7 +339,6 @@ function SceneContents({
     invalidate();
   });
 
-  // Reset camera & target cleanly
   useEffect(() => {
     camera.position.set(...defaultCamPos);
     if (controlsRef.current) {
@@ -370,7 +348,6 @@ function SceneContents({
     invalidate();
   }, [resetCounter, camera, defaultCamPos, targetY, invalidate]);
 
-  // Demand-driven animation loop: runs ONLY while smoothing slider or auto-rotating on a visible tab
   useFrame((_, delta) => {
     if (!pageVisible) return;
 
@@ -379,7 +356,6 @@ function SceneContents({
     const animatingSlider = !reducedMotion && Math.abs(diff) > 1e-4;
 
     if (animatingSlider) {
-      // ~120ms exponential damping
       const alpha = 1 - Math.exp(-Math.min(delta, 0.05) / 0.12);
       const next = current + diff * alpha;
       displayedRRef.current = Math.abs(targetR - next) < 1e-4 ? targetR : next;
@@ -412,17 +388,14 @@ function SceneContents({
 
   return (
     <>
-      {/* Offline-safe procedural studio lighting & reflections */}
-      <hemisphereLight
-        args={[isDark ? "#cbd5e1" : "#f8fafc", isDark ? "#1e293b" : "#94a3b8", isDark ? 0.65 : 0.85]}
-      />
-      <directionalLight position={[7, 11, 8]} intensity={isDark ? 1.15 : 1.05} />
+      <hemisphereLight args={["#f8fafc", "#94a3b8", 0.9]} />
+      <directionalLight position={[7, 11, 8]} intensity={1.05} />
       <directionalLight position={[-6, 5, -5]} intensity={0.35} />
 
       <Environment resolution={128} frames={1}>
         <Lightformer
           form="rect"
-          intensity={1.6}
+          intensity={1.5}
           color="#ffffff"
           scale={[10, 6, 1]}
           position={[0, 8, 6]}
@@ -431,14 +404,14 @@ function SceneContents({
         <Lightformer
           form="rect"
           intensity={0.9}
-          color={isDark ? "#99f6e4" : "#e2e8f0"}
+          color="#e2e8f0"
           scale={[8, 4, 1]}
           position={[-8, 4, 2]}
           rotation={[0, Math.PI / 2, 0]}
         />
         <Lightformer
           form="rect"
-          intensity={0.7}
+          intensity={0.75}
           color="#f8fafc"
           scale={[8, 4, 1]}
           position={[8, 3, -3]}
@@ -446,13 +419,16 @@ function SceneContents({
         />
       </Environment>
 
-      {/* Current solid can: side wall + flat lid + flat base + subtle rim rings */}
       <mesh
         ref={bodyMeshRef}
         geometry={geos.sideWall}
         material={bodyMat}
         position={[mainX, (heightOnConstraint(targetR, v0) * sceneScale) / 2, 0]}
-        scale={[targetR * sceneScale, heightOnConstraint(targetR, v0) * sceneScale, targetR * sceneScale]}
+        scale={[
+          targetR * sceneScale,
+          heightOnConstraint(targetR, v0) * sceneScale,
+          targetR * sceneScale,
+        ]}
       />
       <mesh
         ref={topCapRef}
@@ -473,7 +449,6 @@ function SceneContents({
       <primitive ref={topRimRef} object={topRim} />
       <primitive ref={botRimRef} object={botRim} />
 
-      {/* Live dimension annotation lines + Html callouts */}
       <primitive ref={hLineRef} object={hDimLine} />
       <primitive ref={rLineRef} object={rDimLine} />
 
@@ -483,7 +458,7 @@ function SceneContents({
           center
           style={{ pointerEvents: "none" }}
         >
-          <div className="whitespace-nowrap rounded bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-800 dark:text-slate-200 shadow-sm">
+          <div className="whitespace-nowrap rounded bg-white/95 border border-[#cbd5e1] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[#0f172a] shadow-sm">
             h = {labelDims.h.toFixed(2)} cm
           </div>
         </Html>
@@ -495,40 +470,37 @@ function SceneContents({
           center
           style={{ pointerEvents: "none" }}
         >
-          <div className="whitespace-nowrap rounded bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-800 dark:text-slate-200 shadow-sm">
+          <div className="whitespace-nowrap rounded bg-white/95 border border-[#cbd5e1] px-1.5 py-0.5 font-mono text-[10px] font-medium text-[#0f172a] shadow-sm">
             r = {labelDims.r.toFixed(2)} cm
           </div>
         </Html>
       )}
 
-      {/* Ghost optimal can (amber translucent + rims + 8 sparse vertical guides) */}
       <GhostCan
         geos={geos}
         radius={oR}
         height={oH}
         xPos={mainX}
-        fillColor={isDark ? "#f59e0b" : "#d97706"}
-        lineColor={isDark ? "#fbbf24" : "#b45309"}
+        fillColor="#d97706"
+        lineColor="#b45309"
         opacity={0.15}
       />
 
-      {/* Optional 3rd real can (slate translucent + rims + 8 sparse vertical guides) */}
       {realCan && (
         <GhostCan
           geos={geos}
           radius={realR}
           height={realH}
           xPos={realX}
-          fillColor={isDark ? "#94a3b8" : "#64748b"}
-          lineColor={isDark ? "#cbd5e1" : "#475569"}
-          opacity={0.22}
+          fillColor="#64748b"
+          lineColor="#475569"
+          opacity={0.2}
         />
       )}
 
-      {/* Lightweight static ContactShadows (low res, frames=1) + faint fading ground grid */}
       <ContactShadows
         position={[0, 0.002, 0]}
-        opacity={isDark ? 0.42 : 0.28}
+        opacity={0.28}
         scale={16}
         blur={2.2}
         far={6}
@@ -541,10 +513,10 @@ function SceneContents({
         args={[22, 22]}
         cellSize={1}
         cellThickness={0.5}
-        cellColor={isDark ? "#1e293b" : "#cbd5e1"}
+        cellColor="#cbd5e1"
         sectionSize={4}
         sectionThickness={0.8}
-        sectionColor={isDark ? "#334155" : "#94a3b8"}
+        sectionColor="#94a3b8"
         fadeDistance={18}
         fadeStrength={1.5}
       />
@@ -567,7 +539,6 @@ function SceneContents({
 }
 
 export default function Can3DScene(props: Can3DSceneProps) {
-  const { theme } = useTheme();
   const [webglOk, setWebglOk] = useState<boolean>(true);
   const [reducedMotion, setReducedMotion] = useState<boolean>(false);
   const [pageVisible, setPageVisible] = useState<boolean>(true);
@@ -613,22 +584,16 @@ export default function Can3DScene(props: Can3DSceneProps) {
       <div
         role="region"
         aria-label="3D Can Viewer Fallback"
-        className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-6 text-sm text-amber-900 dark:text-amber-200 space-y-2"
+        className="rounded-xl border border-amber-200 bg-[#fffbeb] p-6 text-sm text-[#b45309] space-y-2"
       >
         <div className="font-semibold">WebGL is not available in this browser or device.</div>
-        <p className="text-xs leading-relaxed">{srDescription}</p>
+        <p className="text-xs leading-relaxed text-[#334155]">{srDescription}</p>
       </div>
     );
   }
 
   return (
-    <div
-      className={`relative w-full h-[440px] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden ${
-        theme === "dark"
-          ? "bg-gradient-to-b from-[#0b1120] to-[#111c33]"
-          : "bg-gradient-to-b from-[#f8fafc] to-[#eef2f6]"
-      }`}
-    >
+    <div className="relative w-full h-[440px] rounded-xl border border-[#e2e8f0] overflow-hidden bg-gradient-to-b from-[#f8fafc] to-[#eef2f6]">
       <p className="sr-only">{srDescription}</p>
       <Canvas
         frameloop="demand"
@@ -638,23 +603,22 @@ export default function Can3DScene(props: Can3DSceneProps) {
       >
         <SceneContents
           {...props}
-          isDark={theme === "dark"}
           reducedMotion={reducedMotion}
           pageVisible={pageVisible}
         />
       </Canvas>
       <div className="pointer-events-none absolute bottom-3 left-3 flex flex-wrap gap-2 text-[11px] font-medium">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 text-slate-800 dark:text-slate-200">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#5e9c98] dark:bg-[#6db5b0]" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 border border-[#cbd5e1] px-2.5 py-0.5 text-[#0f172a]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#5b9a95]" />
           Solid = Current can
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 text-slate-800 dark:text-slate-200">
-          <span className="w-2.5 h-2.5 rounded-full border-2 border-amber-500" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 border border-[#cbd5e1] px-2.5 py-0.5 text-[#0f172a]">
+          <span className="w-2.5 h-2.5 rounded-full border-2 border-[#b45309]" />
           Amber outline = Optimal can
         </span>
         {props.realCan && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 text-slate-800 dark:text-slate-200">
-            <span className="w-2.5 h-2.5 rounded-full border-2 border-slate-500 dark:border-slate-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 border border-[#cbd5e1] px-2.5 py-0.5 text-[#0f172a]">
+            <span className="w-2.5 h-2.5 rounded-full border-2 border-[#475569]" />
             Slate outline = {props.realCan.name}
           </span>
         )}

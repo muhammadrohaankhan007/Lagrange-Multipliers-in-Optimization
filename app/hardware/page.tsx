@@ -165,20 +165,23 @@ export default function HardwarePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#0f172a]">
       <Navbar />
 
-      <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main
+        id="main-content"
+        className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-6 py-6 space-y-6"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#0f766e]">
               <Cpu className="w-4 h-4" aria-hidden="true" />
               Optional Hardware Add-On (Off by Default)
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
+            <h1 className="text-2xl font-semibold text-[#0f172a] mt-0.5">
               Optional: connect an ESP32
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-sm text-[#475569] mt-1">
               The main CanOptimizer app is 100% complete without hardware. This optional page lets
               you connect an ESP32 height station over USB using the Web Serial API (no server
               needed).
@@ -186,34 +189,32 @@ export default function HardwarePage() {
           </div>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
             Back to Optimizer
           </Link>
         </div>
 
-        {/* Honest Optional & Simulation Disclosure Banner */}
-        <div className="rounded-xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50/70 dark:bg-indigo-950/30 p-4 flex items-start gap-3 text-xs sm:text-sm text-indigo-950 dark:text-indigo-200">
-          <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="rounded-xl border border-[#0f766e]/25 bg-[#f0fdfa] p-4 flex items-start gap-3 text-sm text-[#0f172a]">
+          <Info className="w-5 h-5 text-[#0f766e] shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <strong>Optional module notice:</strong> No ESP32 is required to use CanOptimizer.
-            When <strong>Simulation Mode</strong> is enabled below, the height values are{" "}
+            <strong>Optional module notice:</strong> No ESP32 is required to use CanOptimizer. When{" "}
+            <strong>Simulation Mode</strong> is enabled below, the height values are{" "}
             <strong>synthetic simulated readings — not real physical sensor measurements</strong>.
           </div>
         </div>
 
-        {/* Browser Support Detection */}
         {!serialSupported && (
           <div
             role="status"
-            className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 flex items-start gap-3"
+            className="rounded-xl border border-amber-200 bg-[#fffbeb] p-4 flex items-start gap-3"
           >
             <AlertTriangle
-              className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+              className="w-5 h-5 text-[#b45309] shrink-0 mt-0.5"
               aria-hidden="true"
             />
-            <div className="text-xs sm:text-sm text-amber-900 dark:text-amber-200">
+            <div className="text-sm text-[#b45309]">
               <strong>Web Serial API is not supported in this browser.</strong> USB ESP32
               connection requires desktop Google Chrome or Microsoft Edge. You can still use{" "}
               <strong>Simulation Mode</strong> below in any browser.
@@ -224,7 +225,7 @@ export default function HardwarePage() {
         {errorMsg && (
           <div
             role="alert"
-            className="rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 p-4 text-xs sm:text-sm text-rose-800 dark:text-rose-200"
+            className="rounded-xl border border-red-200 bg-[#fef2f2] p-4 text-sm text-[#b91c1c]"
           >
             {errorMsg}
           </div>
@@ -233,10 +234,10 @@ export default function HardwarePage() {
         {serialWarning && (
           <div
             role="status"
-            className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-3.5 flex items-start justify-between gap-3 text-xs text-amber-900 dark:text-amber-200"
+            className="rounded-xl border border-amber-200 bg-[#fffbeb] p-3.5 flex items-start justify-between gap-3 text-xs text-[#b45309]"
           >
             <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
               <span>{serialWarning}</span>
             </div>
             <button
@@ -252,13 +253,10 @@ export default function HardwarePage() {
         {capturedToast && (
           <div
             role="status"
-            className="rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-4 flex items-center justify-between gap-3 text-xs sm:text-sm text-emerald-900 dark:text-emerald-200"
+            className="rounded-xl border border-emerald-200 bg-[#ecfdf5] p-4 flex items-center justify-between gap-3 text-sm text-[#047857]"
           >
             <div className="flex items-center gap-2">
-              <CheckCircle2
-                className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0"
-                aria-hidden="true"
-              />
+              <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>{capturedToast}</span>
             </div>
             <Link href="/" className="underline font-semibold shrink-0">
@@ -267,26 +265,24 @@ export default function HardwarePage() {
           </div>
         )}
 
-        {/* Controls Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Real Hardware USB Card */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+          <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Usb className="w-4 h-4 text-indigo-600" aria-hidden="true" />
+              <h2 className="text-base font-semibold text-[#0f172a] flex items-center gap-2">
+                <Usb className="w-4 h-4 text-[#0f766e]" aria-hidden="true" />
                 USB Web Serial (ESP32)
               </h2>
               <span
-                className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
                   connected
-                    ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    ? "bg-[#ecfdf5] text-[#047857] border border-emerald-200"
+                    : "bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0]"
                 }`}
               >
                 {connected ? "Connected" : "Disconnected"}
               </span>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-[#475569]">
               Flash <code className="font-mono">/firmware/src/main.cpp</code> to your ESP32,
               connect via USB, and click Connect. Expects 115200 baud JSON lines like{" "}
               <code className="font-mono">{`{"height_cm": 12.24}`}</code>. Malformed lines are
@@ -298,7 +294,7 @@ export default function HardwarePage() {
                   type="button"
                   onClick={handleConnectUsb}
                   disabled={!serialSupported}
-                  className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-4 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#0f766e] hover:bg-[#115e59] disabled:opacity-45 text-white px-4 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] focus-visible:ring-offset-2 transition-colors"
                 >
                   <Usb className="w-4 h-4" aria-hidden="true" />
                   Connect device
@@ -307,7 +303,7 @@ export default function HardwarePage() {
                 <button
                   type="button"
                   onClick={handleDisconnectUsb}
-                  className="inline-flex items-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#b91c1c] hover:bg-red-800 text-white px-4 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91c1c] focus-visible:ring-offset-2 transition-colors"
                 >
                   Disconnect
                 </button>
@@ -315,24 +311,23 @@ export default function HardwarePage() {
               <button
                 type="button"
                 onClick={handleTestMalformedLine}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
               >
                 Test malformed JSON handling
               </button>
             </div>
           </div>
 
-          {/* Simulation Mode Card */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+          <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-base font-semibold text-[#0f172a]">
                 Simulation Mode (Synthetic Data)
               </h2>
               <span
-                className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
                   simulating
-                    ? "bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    ? "bg-[#fffbeb] text-[#b45309] border border-amber-200"
+                    : "bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0]"
                 }`}
               >
                 {simulating ? "Simulated Stream Active" : "Idle"}
@@ -342,7 +337,7 @@ export default function HardwarePage() {
             <div className="space-y-2">
               <label
                 htmlFor="sim-preset-select"
-                className="block text-xs font-medium text-slate-700 dark:text-slate-300"
+                className="block text-xs font-medium text-[#334155]"
               >
                 Simulated Can Preset (generates synthetic readings, not real measurements):
               </label>
@@ -351,7 +346,7 @@ export default function HardwarePage() {
                   id="sim-preset-select"
                   value={presetId}
                   onChange={(e) => handlePresetChange(e.target.value)}
-                  className="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-xs text-slate-800 dark:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="flex-1 rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-xs text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
                 >
                   {SIMULATED_CAN_PRESETS.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -364,7 +359,7 @@ export default function HardwarePage() {
                   <button
                     type="button"
                     onClick={handleStartSimulation}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#0f766e] hover:bg-[#115e59] text-white px-3.5 py-2 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] focus-visible:ring-offset-2 transition-colors"
                   >
                     <Play className="w-3.5 h-3.5" aria-hidden="true" />
                     Start Simulation
@@ -373,7 +368,7 @@ export default function HardwarePage() {
                   <button
                     type="button"
                     onClick={handleStopSimulation}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-2 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3.5 py-2 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
                   >
                     <Square className="w-3.5 h-3.5" aria-hidden="true" />
                     Stop
@@ -384,19 +379,18 @@ export default function HardwarePage() {
           </div>
         </div>
 
-        {/* Live Reading + Capture Panel */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm space-y-5">
+        <div className="rounded-xl border border-[#e2e8f0] bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <div className="text-xs font-semibold uppercase tracking-wider text-[#475569]">
                 {latest?.simulated
                   ? "Simulated Height Reading (Not a Real Measurement)"
                   : "Live Height Reading (cm)"}
               </div>
-              <div className="text-4xl font-bold font-mono text-indigo-600 dark:text-indigo-400 mt-1">
+              <div className="text-4xl font-semibold font-mono tabular-nums text-[#0f766e] mt-1">
                 {latest ? `${latest.height_cm.toFixed(2)} cm` : "— . — — cm"}
               </div>
-              <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+              <div className="text-xs text-[#475569] mt-1">
                 {latest
                   ? `${
                       latest.simulated ? "Simulated (synthetic)" : "ESP32 USB Serial"
@@ -409,19 +403,16 @@ export default function HardwarePage() {
               type="button"
               onClick={handleCapture}
               disabled={!latest}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white px-5 py-2.5 text-sm font-semibold shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#0f766e] hover:bg-[#115e59] disabled:opacity-40 text-white px-5 py-2.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] focus-visible:ring-offset-2 transition-colors"
             >
               <Camera className="w-4 h-4" aria-hidden="true" />
               Capture to Real Cans Table
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[#e2e8f0]">
             <div>
-              <label
-                htmlFor="hw-can-label"
-                className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
-              >
+              <label htmlFor="hw-can-label" className="block text-xs font-medium text-[#334155] mb-1">
                 Can Label
               </label>
               <input
@@ -429,13 +420,13 @@ export default function HardwarePage() {
                 type="text"
                 value={canName}
                 onChange={(e) => setCanName(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="w-full rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-sm text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
               />
             </div>
             <div>
               <label
                 htmlFor="hw-can-diameter"
-                className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+                className="block text-xs font-medium text-[#334155] mb-1"
               >
                 Diameter d (cm) — Manual / Caliper
               </label>
@@ -447,13 +438,13 @@ export default function HardwarePage() {
                 max="100"
                 value={diameterCm}
                 onChange={(e) => setDiameterCm(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="w-full rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-sm font-mono tabular-nums text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
               />
             </div>
             <div>
               <label
                 htmlFor="hw-can-volume"
-                className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+                className="block text-xs font-medium text-[#334155] mb-1"
               >
                 Stated Volume (cm³ / mL)
               </label>
@@ -465,20 +456,23 @@ export default function HardwarePage() {
                 max="100000"
                 value={volumeMl}
                 onChange={(e) => setVolumeMl(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm font-mono text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="w-full rounded-lg border border-[#cbd5e1] bg-white px-3 py-2 text-sm font-mono tabular-nums text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
               />
             </div>
           </div>
 
           {history.length > 0 && (
             <div className="pt-2">
-              <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
+              <div className="text-xs font-semibold text-[#475569] mb-2">
                 Recent Serial JSON Stream
               </div>
-              <div className="rounded-lg bg-slate-950 text-emerald-400 font-mono text-xs p-3 max-h-40 overflow-y-auto space-y-1">
+              <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] text-[#0f172a] font-mono text-xs p-3 max-h-40 overflow-y-auto space-y-1">
                 {history.map((item, idx) => (
                   <div key={`${item.timestamp}-${idx}`}>
-                    [{new Date(item.timestamp).toLocaleTimeString()}] {item.raw}
+                    <span className="text-[#475569]">
+                      [{new Date(item.timestamp).toLocaleTimeString()}]
+                    </span>{" "}
+                    {item.raw}
                   </div>
                 ))}
               </div>
@@ -487,7 +481,7 @@ export default function HardwarePage() {
         </div>
       </main>
 
-      <footer className="border-t border-slate-200 dark:border-slate-800 py-4 px-4 text-center text-xs text-slate-600 dark:text-slate-400">
+      <footer className="border-t border-[#e2e8f0] bg-white py-5 px-4 text-center text-xs text-[#475569]">
         Lagrange Multipliers in Optimization: Minimum-Surface-Area Soda Can · Optional ESP32
         Module
       </footer>

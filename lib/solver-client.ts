@@ -13,19 +13,32 @@
  *  - onSolverStatus(listener)
  */
 
-export type SolverStage =
-  | "idle"
-  | "loading_runtime"
-  | "loading_packages"
-  | "loading_solver"
-  | "warming_up"
-  | "ready"
-  | "error";
+export type SolverStage = "idle" | "loading" | "ready" | "error";
+
+export type LoaderStepState = "waiting" | "active" | "done" | "failed";
+
+export interface LoaderStep {
+  id: string;
+  label: string;
+  state: LoaderStepState;
+}
 
 export interface SolverStatus {
   stage: SolverStage;
   message: string;
+  steps: LoaderStep[];
+  failedStep?: string | null;
+  rawError?: string | null;
 }
+
+export const INITIAL_LOADER_STEPS: LoaderStep[] = [
+  { id: "runtime", label: "Download Python runtime", state: "waiting" },
+  { id: "numpy", label: "Load NumPy", state: "waiting" },
+  { id: "sympy", label: "Load SymPy", state: "waiting" },
+  { id: "scipy", label: "Load SciPy", state: "waiting" },
+  { id: "solver", label: "Load the CanOptimizer solver", state: "waiting" },
+  { id: "selftest", label: "Run a quick self-test", state: "waiting" },
+];
 
 export interface DerivationStep {
   step_number: number;
@@ -193,7 +206,10 @@ const pending = new Map<number, PendingRequest>();
 const statusListeners = new Set<StatusListener>();
 let currentStatus: SolverStatus = {
   stage: "idle",
-  message: "Pyodide engine not yet started.",
+  message: "Starting the math engine…",
+  steps: INITIAL_LOADER_STEPS.map((s) => ({ ...s })),
+  failedStep: null,
+  rawError: null,
 };
 
 // In-memory cache for repeated queries so UI slider/tab switches are instant
@@ -228,7 +244,13 @@ function getWorker(): Worker {
       const data = event.data;
       if (!data) return;
       if (data.type === "status") {
-        emitStatus({ stage: data.stage, message: data.message });
+        emitStatus({
+          stage: data.stage,
+          message: data.message,
+          steps: Array.isArray(data.steps) ? data.steps : currentStatus.steps,
+          failedStep: data.failedStep ?? null,
+          rawError: data.rawError ?? null,
+        });
         return;
       }
       const { id, ok, result, error } = data;
@@ -243,7 +265,13 @@ function getWorker(): Worker {
     };
     worker.onerror = (err) => {
       const message = err.message || "Web Worker crashed while loading Pyodide.";
-      emitStatus({ stage: "error", message });
+      emitStatus({
+        stage: "error",
+        message,
+        steps: currentStatus.steps,
+        failedStep: "Download Python runtime",
+        rawError: message,
+      });
       for (const [, entry] of pending) {
         entry.reject(new Error(message));
       }

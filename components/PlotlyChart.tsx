@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Download, Lightbulb } from "lucide-react";
-import { useTheme } from "./ThemeProvider";
 
 export interface PlotlyChartProps {
   title: string;
@@ -51,7 +50,6 @@ export function PlotlyChart({
   const plotlyRef = useRef<PlotlyModule | null>(null);
   const clickCallbackRef = useRef(onPointClick);
   clickCallbackRef.current = onPointClick;
-  const { theme } = useTheme();
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
@@ -65,17 +63,16 @@ export function PlotlyChart({
       }
       if (cancelled || !containerRef.current || !plotlyRef.current) return;
 
-      const isDark = theme === "dark";
-      const paperBg = isDark ? "#0f172a" : "#ffffff";
-      const plotBg = isDark ? "#1e293b" : "#f8fafc";
-      const fontColor = isDark ? "#f1f5f9" : "#0f172a";
-      const tickColor = isDark ? "#cbd5e1" : "#334155";
-      const gridColor = isDark ? "#334155" : "#cbd5e1";
+      const paperBg = "#ffffff";
+      const plotBg = "#f8fafc";
+      const fontColor = "#0f172a";
+      const tickColor = "#334155";
+      const gridColor = "#e2e8f0";
 
       const baseAxis = {
         gridcolor: gridColor,
-        zerolinecolor: gridColor,
-        linecolor: gridColor,
+        zerolinecolor: "#cbd5e1",
+        linecolor: "#cbd5e1",
         tickfont: { color: tickColor, size: 11 },
         titlefont: { color: fontColor, size: 12 },
       };
@@ -89,7 +86,7 @@ export function PlotlyChart({
         font: { color: fontColor, family: "Inter, system-ui, sans-serif", size: 12 },
         legend: {
           font: { color: fontColor, size: 11 },
-          bgcolor: "rgba(0,0,0,0)",
+          bgcolor: "rgba(255,255,255,0)",
         },
         ...layout,
       };
@@ -111,7 +108,7 @@ export function PlotlyChart({
       if (typeof layout.legend === "object" && layout.legend) {
         mergedLayout.legend = {
           font: { color: fontColor, size: 11 },
-          bgcolor: "rgba(0,0,0,0)",
+          bgcolor: "rgba(255,255,255,0)",
           ...(layout.legend as Record<string, unknown>),
         };
       }
@@ -139,7 +136,6 @@ export function PlotlyChart({
         };
       }
 
-      // Ensure colorbar fonts match light/dark theme on contour/surface traces
       const themedData = data.map((trace) => {
         if (trace.colorbar && typeof trace.colorbar === "object") {
           return {
@@ -167,7 +163,10 @@ export function PlotlyChart({
       await plotlyRef.current.react(containerRef.current, themedData, mergedLayout, config);
 
       const el = containerRef.current as HTMLDivElement & {
-        on?: (ev: string, fn: (data: { points?: Array<{ x?: unknown; y?: unknown }> }) => void) => void;
+        on?: (
+          ev: string,
+          fn: (data: { points?: Array<{ x?: unknown; y?: unknown }> }) => void
+        ) => void;
         removeAllListeners?: (ev: string) => void;
       };
       if (el.removeAllListeners) {
@@ -191,7 +190,7 @@ export function PlotlyChart({
     return () => {
       cancelled = true;
     };
-  }, [data, layout, theme, height, filename]);
+  }, [data, layout, height, filename]);
 
   useEffect(() => {
     return () => {
@@ -218,22 +217,20 @@ export function PlotlyChart({
   };
 
   return (
-    <figure className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+    <figure className="rounded-xl border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 border-b border-[#e2e8f0]">
         <div>
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-          {subtitle && (
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{subtitle}</p>
-          )}
+          <h3 className="text-sm font-semibold text-[#0f172a]">{title}</h3>
+          {subtitle && <p className="text-xs text-[#475569] mt-0.5">{subtitle}</p>}
         </div>
         <button
           type="button"
           onClick={handleDownloadPng}
           disabled={exporting}
           aria-label={`Download ${title} as PNG`}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-2.5 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors disabled:opacity-50"
         >
-          <Download className="w-3.5 h-3.5" />
+          <Download className="w-3.5 h-3.5" aria-hidden="true" />
           {exporting ? "Exporting..." : "PNG"}
         </button>
       </div>
@@ -247,13 +244,10 @@ export function PlotlyChart({
         />
       </div>
       {takeaway && (
-        <figcaption className="flex items-start gap-2 px-4 py-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 text-xs text-slate-700 dark:text-slate-300">
-          <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+        <figcaption className="flex items-start gap-2 px-5 py-3 border-t border-[#e2e8f0] bg-[#f8fafc] text-xs text-[#334155]">
+          <Lightbulb className="w-3.5 h-3.5 text-[#b45309] shrink-0 mt-0.5" aria-hidden="true" />
           <span>
-            <strong className="font-semibold text-slate-900 dark:text-slate-100">
-              Takeaway:
-            </strong>{" "}
-            {takeaway}
+            <strong className="font-semibold text-[#0f172a]">Takeaway:</strong> {takeaway}
           </span>
         </figcaption>
       )}

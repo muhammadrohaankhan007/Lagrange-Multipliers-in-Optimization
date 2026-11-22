@@ -20,6 +20,7 @@ import { PyodideBanner } from "@/components/PyodideBanner";
 import { DemoGuidePanel, type DemoTabId } from "@/components/DemoGuidePanel";
 import { AboutSection } from "@/components/AboutSection";
 import { TabBar, type TabItem } from "@/components/TabBar";
+import { EngineWaitingSkeleton } from "@/components/EngineWaitingSkeleton";
 import { ProblemTab } from "@/components/tabs/ProblemTab";
 import { AnalyticalTab } from "@/components/tabs/AnalyticalTab";
 import { VerificationTab } from "@/components/tabs/VerificationTab";
@@ -34,14 +35,12 @@ const Can3DTab = dynamic(
   () => import("@/components/tabs/Can3DTab").then((mod) => mod.Can3DTab),
   {
     ssr: false,
-    loading: () => (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-        Loading 3D Can viewer...
-      </div>
-    ),
+    loading: () => <EngineWaitingSkeleton title="Loading 3D Can viewer…" />,
   }
 );
+
 import {
+  INITIAL_LOADER_STEPS,
   analyzeRealCans,
   compareShapes,
   generateVisualizations,
@@ -84,7 +83,6 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<DemoTabId>("problem");
   const [demoOpen, setDemoOpen] = useState<boolean>(false);
 
-  // Shared validated volume state: v0 always holds the last valid number
   const [v0, setV0] = useState<number>(DEFAULT_V0);
   const [v0Input, setV0Input] = useState<string>(String(DEFAULT_V0));
   const [v0Error, setV0Error] = useState<string | null>(null);
@@ -94,7 +92,10 @@ export default function HomePage() {
 
   const [solverStatus, setSolverStatus] = useState<SolverStatus>({
     stage: "idle",
-    message: "Starting Pyodide Web Worker...",
+    message: "Starting the math engine…",
+    steps: INITIAL_LOADER_STEPS.map((s) => ({ ...s })),
+    failedStep: null,
+    rawError: null,
   });
   const [ready, setReady] = useState(false);
 
@@ -110,7 +111,6 @@ export default function HomePage() {
 
   const [busy, setBusy] = useState(false);
 
-  // Open demo panel if ?demo=1 is in the URL
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -120,17 +120,17 @@ export default function HomePage() {
     }
   }, []);
 
-  // Load saved cans from localStorage on client mount
   useEffect(() => {
     setRawCans(loadRealCans());
   }, []);
 
-  // Validate volume string; keep last valid v0 on error so charts never blank or crash
   const handleV0InputChange = useCallback((raw: string) => {
     setV0Input(raw);
     const trimmed = raw.trim();
     if (!trimmed) {
-      setV0Error(`Volume cannot be empty. Enter a value between ${V0_MIN} and ${V0_MAX.toLocaleString()} cm³.`);
+      setV0Error(
+        `Volume cannot be empty. Enter a value between ${V0_MIN} and ${V0_MAX.toLocaleString()} cm³.`
+      );
       return;
     }
     const parsed = Number(trimmed);
@@ -166,7 +166,6 @@ export default function HomePage() {
     setKWeight(Math.min(4.0, Math.max(0.25, Number(val.toFixed(2)))));
   }, []);
 
-  // Initialize Pyodide Web Worker once on mount
   const bootPyodide = useCallback(() => {
     setReady(false);
     initSolver()
@@ -182,7 +181,6 @@ export default function HomePage() {
     return unsub;
   }, [bootPyodide]);
 
-  // 1. Always keep analytical solution synced with V0 once Pyodide is ready
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
@@ -199,7 +197,6 @@ export default function HomePage() {
     };
   }, [ready, v0]);
 
-  // 2. Tab-specific computations
   useEffect(() => {
     if (!ready || activeTab !== "verification") return;
     let cancelled = false;
@@ -334,7 +331,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#f8fafc] text-[#0f172a]">
       <Navbar
         solverStatus={solverStatus}
         onRetrySolver={bootPyodide}
@@ -342,7 +339,10 @@ export default function HomePage() {
         demoOpen={demoOpen}
       />
 
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+      <main
+        id="main-content"
+        className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-6 py-6 space-y-6"
+      >
         <PyodideBanner status={solverStatus} onRetry={bootPyodide} />
 
         {demoOpen && (
@@ -353,16 +353,13 @@ export default function HomePage() {
           />
         )}
 
-        {/* Shared Target Volume Bar (persists across all tabs) */}
+        {/* Shared Target Volume Bar */}
         <section
           aria-label="Shared target volume control"
-          className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 shadow-sm flex flex-wrap items-center justify-between gap-3"
+          className="rounded-xl border border-[#e2e8f0] bg-white px-4 sm:px-5 py-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex flex-wrap items-center justify-between gap-3"
         >
           <div className="flex flex-wrap items-center gap-3">
-            <label
-              htmlFor="shared-v0-input"
-              className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200"
-            >
+            <label htmlFor="shared-v0-input" className="text-sm font-semibold text-[#0f172a]">
               Shared Target Volume V₀:
             </label>
             <div className="flex items-center gap-1.5">
@@ -374,20 +371,18 @@ export default function HomePage() {
                 aria-invalid={Boolean(v0Error)}
                 aria-describedby={v0Error ? "shared-v0-error" : undefined}
                 onChange={(e) => handleV0InputChange(e.target.value)}
-                className={`w-28 rounded-lg border px-2.5 py-1 text-sm font-mono font-semibold bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus-visible:outline-none focus-visible:ring-2 ${
+                className={`w-28 rounded-lg border px-2.5 py-1 text-sm font-mono tabular-nums font-semibold bg-white text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 ${
                   v0Error
-                    ? "border-rose-500 focus-visible:ring-rose-500"
-                    : "border-slate-300 dark:border-slate-700 focus-visible:ring-indigo-500"
+                    ? "border-[#b91c1c] focus-visible:ring-[#b91c1c]"
+                    : "border-[#cbd5e1] focus-visible:ring-[#0f766e]"
                 }`}
               />
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                cm³ (mL)
-              </span>
+              <span className="text-xs font-medium text-[#475569]">cm³ (mL)</span>
             </div>
             <button
               type="button"
               onClick={handleResetV0}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+              className="inline-flex items-center gap-1 rounded-lg border border-[#cbd5e1] bg-white px-2.5 py-1 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
             >
               <RotateCcw className="w-3 h-3" aria-hidden="true" />
               Reset to 355
@@ -395,30 +390,24 @@ export default function HomePage() {
           </div>
 
           {v0Error ? (
-            <p
-              id="shared-v0-error"
-              role="alert"
-              className="text-xs text-rose-600 dark:text-rose-400"
-            >
+            <p id="shared-v0-error" role="alert" className="text-xs text-[#b91c1c]">
               {v0Error} (Active: {v0} cm³)
             </p>
           ) : (
-            <div className="text-xs text-slate-600 dark:text-slate-400 font-mono">
+            <div className="text-xs text-[#475569] font-mono tabular-nums">
               {solution
                 ? `r* = ${solution.r_opt.toFixed(3)} cm · h* = ${solution.h_opt.toFixed(
                     3
                   )} cm · A_min = ${solution.area_min.toFixed(2)} cm² · λ* = ${solution.lambda_opt.toFixed(
                     4
                   )} 1/cm`
-                : "Waiting for Pyodide..."}
+                : "Waiting for the math engine…"}
             </div>
           )}
         </section>
 
-        {/* Polished Grouped Tab Bar with Fade Edges, Chevrons & Keyboard Nav */}
         <TabBar tabs={TABS} activeTab={activeTab} onSelectTab={setActiveTab} />
 
-        {/* Active Tab Content */}
         <div role="tabpanel">
           {activeTab === "problem" && (
             <ProblemTab
@@ -435,6 +424,7 @@ export default function HomePage() {
           {activeTab === "analytical" && <AnalyticalTab solution={solution} loading={busy} />}
           {activeTab === "verification" && (
             <VerificationTab
+              solution={solution}
               verification={verification}
               tolerance={tolerance}
               onChangeTolerance={setTolerance}
@@ -453,6 +443,7 @@ export default function HomePage() {
           {activeTab === "real-cans" && (
             <RealCansTab
               cans={analyzedCans}
+              engineReady={ready}
               onAddCan={handleAddCan}
               onEditCan={handleEditCan}
               onDeleteCan={handleDeleteCan}
@@ -470,7 +461,11 @@ export default function HomePage() {
             />
           )}
           {activeTab === "shapes" && (
-            <ShapeComparisonTab comparison={shapeComparison} loading={busy} />
+            <ShapeComparisonTab
+              solution={solution}
+              comparison={shapeComparison}
+              loading={busy}
+            />
           )}
           {activeTab === "tangency" && (
             <TangencyDemoTab v0={v0} solution={solution} loading={busy} />
@@ -488,13 +483,13 @@ export default function HomePage() {
         <AboutSection />
       </main>
 
-      <footer className="border-t border-slate-200 dark:border-slate-800 py-4 px-4 text-center text-xs text-slate-600 dark:text-slate-400">
-        <div className="font-medium text-slate-800 dark:text-slate-200">
+      <footer className="border-t border-[#e2e8f0] bg-white py-5 px-4 text-center text-xs text-[#475569]">
+        <div className="font-medium text-[#0f172a]">
           Lagrange Multipliers in Optimization: Minimum-Surface-Area Soda Can
         </div>
-        <div className="mt-0.5">
+        <div className="mt-1">
           CanOptimizer · MTH-111 Multivariable Calculus · Salim Habib University · SymPy &amp;
-          SciPy via Pyodide
+          SciPy in your browser
         </div>
       </footer>
     </div>

@@ -3,6 +3,8 @@
 import React from "react";
 import { Download } from "lucide-react";
 import { MathBlock } from "@/components/MathBlock";
+import { ResultSummaryStrip } from "@/components/ResultSummaryStrip";
+import { EngineWaitingSkeleton } from "@/components/EngineWaitingSkeleton";
 import { downloadCsv } from "@/lib/csv";
 import type { AnalyticalSolution } from "@/lib/solver-client";
 
@@ -31,41 +33,43 @@ export function AnalyticalTab({ solution, loading }: AnalyticalTabProps) {
     );
   };
 
-  if (loading && !solution) {
-    return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-        Running SymPy symbolic derivation in Pyodide...
-      </div>
-    );
-  }
-
   if (!solution) {
     return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-        Analytical solution unavailable until Pyodide finishes loading.
-      </div>
+      <EngineWaitingSkeleton
+        title={
+          loading
+            ? "Computing symbolic derivation with SymPy…"
+            : "Waiting for the math engine…"
+        }
+      />
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <ResultSummaryStrip
+        solution={solution}
+        caption={`SymPy analytical optimum for V₀ = ${solution.v0} cm³`}
+      />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-[#0f172a]">
             Step-by-Step Symbolic Solution (SymPy)
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-[#475569] mt-0.5">
             Generated live by <code className="font-mono">lib/python/solver.py</code> using{" "}
-            <code className="font-mono">sympy.diff</code>, <code className="font-mono">sympy.solve</code>, and{" "}
+            <code className="font-mono">sympy.diff</code>,{" "}
+            <code className="font-mono">sympy.solve</code>, and{" "}
             <code className="font-mono">sympy.latex</code>.
           </p>
         </div>
         <button
           type="button"
           onClick={handleExportCsv}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
         >
-          <Download className="w-3.5 h-3.5" />
+          <Download className="w-3.5 h-3.5" aria-hidden="true" />
           Export Results CSV
         </button>
       </div>
@@ -74,20 +78,16 @@ export function AnalyticalTab({ solution, loading }: AnalyticalTabProps) {
         {solution.steps.map((step) => (
           <div
             key={step.step_number}
-            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm"
+            className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
           >
-            <div className="flex items-start gap-3">
-              <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+            <div className="flex items-start gap-3.5">
+              <div className="w-7 h-7 rounded-full bg-[#0f766e] text-white text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
                 {step.step_number}
               </div>
-              <div className="min-w-0 flex-1 space-y-2">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {step.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                  {step.explanation}
-                </p>
-                <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-3">
+              <div className="min-w-0 flex-1 space-y-2.5">
+                <h3 className="text-sm font-semibold text-[#0f172a]">{step.title}</h3>
+                <p className="text-sm text-[#334155] leading-relaxed">{step.explanation}</p>
+                <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] px-4 py-3">
                   <MathBlock latex={step.latex} />
                 </div>
               </div>

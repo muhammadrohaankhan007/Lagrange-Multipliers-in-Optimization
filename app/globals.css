@@ -3,31 +3,59 @@
 @tailwind utilities;
 
 :root {
-  --nav-bg: rgba(248, 250, 252, 0.92);
-  --nav-border: #e2e8f0;
-  --nav-text: #0f172a;
-  --nav-muted: #475569;
-  --nav-accent: #0f766e;
-  --nav-accent-subtle: rgba(15, 118, 110, 0.1);
-}
+  color-scheme: light;
 
-.dark {
-  --nav-bg: rgba(11, 17, 32, 0.92);
-  --nav-border: #1e293b;
-  --nav-text: #f1f5f9;
-  --nav-muted: #94a3b8;
-  --nav-accent: #2dd4bf;
-  --nav-accent-subtle: rgba(45, 212, 191, 0.12);
+  /* Core Light Palette — calm, precise, scientific */
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+
+  /* Single Muted Teal Accent */
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-soft: #f0fdfa;
+  --accent-ring: rgba(15, 118, 110, 0.18);
+
+  /* Borders & Semantic Status */
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --status-success: #047857;
+  --status-success-bg: #ecfdf5;
+  --status-warning: #b45309;
+  --status-warning-bg: #fffbeb;
+  --status-danger: #b91c1c;
+  --status-danger-bg: #fef2f2;
+
+  /* Navbar tokens */
+  --nav-bg: rgba(255, 255, 255, 0.94);
+  --nav-border: var(--border-subtle);
+  --nav-text: var(--text-primary);
+  --nav-muted: var(--text-muted);
+  --nav-accent: var(--accent);
+  --nav-accent-subtle: var(--accent-soft);
 }
 
 @layer base {
+  html {
+    color-scheme: light;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-[#0b1120] dark:text-slate-100 antialiased;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
 .katex-display {
-  margin: 0.45rem 0 !important;
+  margin: 0.5rem 0 !important;
 }
 
 /* Hidden scrollbar for horizontal tab bar (replaced by fade edges & chevrons) */
@@ -37,6 +65,29 @@
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Calm indeterminate step bar for real-event math engine loader */
+@keyframes indeterminate-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+.loader-indeterminate {
+  width: 38%;
+  animation: indeterminate-slide 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-indeterminate {
+    animation: none;
+    width: 100%;
+    opacity: 0.45;
+  }
 }
 
 /* Shared precision RangeSlider styling: focus-visible ring on thumb only */
@@ -71,15 +122,10 @@ input[type="range"].can-slider::-webkit-slider-thumb {
   margin-top: -7px;
   border-radius: 9999px;
   background: #ffffff;
-  border: 2px solid var(--nav-accent);
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.22);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.2);
   cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease;
-}
-
-.dark input[type="range"].can-slider::-webkit-slider-thumb {
-  background: #0f172a;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
 }
 
 input[type="range"].can-slider::-moz-range-thumb {
@@ -87,15 +133,10 @@ input[type="range"].can-slider::-moz-range-thumb {
   height: 18px;
   border-radius: 9999px;
   background: #ffffff;
-  border: 2px solid var(--nav-accent);
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.22);
+  border: 2px solid var(--accent);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.2);
   cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease;
-}
-
-.dark input[type="range"].can-slider::-moz-range-thumb {
-  background: #0f172a;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
 }
 
 input[type="range"].can-slider:hover::-webkit-slider-thumb {
@@ -105,12 +146,11 @@ input[type="range"].can-slider:hover::-moz-range-thumb {
   transform: scale(1.06);
 }
 
-/* Focus-visible ring ONLY on the thumb, never a box around the whole slider */
 input[type="range"].can-slider:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px var(--nav-accent-subtle), 0 0 0 5px var(--nav-accent);
+  box-shadow: 0 0 0 3px var(--accent-ring), 0 0 0 5px var(--accent);
 }
 input[type="range"].can-slider:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 3px var(--nav-accent-subtle), 0 0 0 5px var(--nav-accent);
+  box-shadow: 0 0 0 3px var(--accent-ring), 0 0 0 5px var(--accent);
 }
 
 @media (prefers-reduced-motion: reduce) {

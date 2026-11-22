@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Compass, RotateCcw, Target } from "lucide-react";
 import { PlotlyChart } from "@/components/PlotlyChart";
 import { RangeSlider } from "@/components/RangeSlider";
+import { EngineWaitingSkeleton } from "@/components/EngineWaitingSkeleton";
 import {
   ALIGNMENT_TOLERANCE_DEG,
   evaluateTangencyAtRadius,
@@ -27,7 +28,6 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
 
   const [radius, setRadius] = useState<number>(limits.defaultNonOptimal);
 
-  // Reset starting point cleanly when V0 (and thus r*) changes
   useEffect(() => {
     setRadius(limits.defaultNonOptimal);
   }, [limits.defaultNonOptimal, v0]);
@@ -35,7 +35,6 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
   const clampedR = Math.min(limits.max, Math.max(limits.min, radius));
   const metrics = useMemo(() => evaluateTangencyAtRadius(clampedR, v0), [clampedR, v0]);
 
-  // Build 2D contour grid, constraint curve, active level curve, tangent line, and fixed-length gradient arrows
   const plotModel = useMemo(() => {
     if (!solution) return { data: [], layout: {} };
 
@@ -46,7 +45,6 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
     const hMinPlot = Math.max(0.25, 0.25 * hOpt);
     const hMaxPlot = 2.6 * hOpt;
 
-    // 1. Background contour grid of f(r, h)
     const n = 50;
     const rGrid: number[] = [];
     const hGrid: number[] = [];
@@ -56,7 +54,6 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
     }
     const zGrid: number[][] = hGrid.map((hv) => rGrid.map((rv) => surfaceArea(rv, hv)));
 
-    // 2. Constraint curve g(r, h) = V0
     const cR: number[] = [];
     const cH: number[] = [];
     for (let i = 0; i < 180; i++) {
@@ -68,7 +65,6 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
       }
     }
 
-    // 3. Level curve of f(r, h) = metrics.area through the chosen point
     const levelR: number[] = [];
     const levelH: number[] = [];
     for (let i = 0; i < 180; i++) {
@@ -80,14 +76,11 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
       }
     }
 
-    // 4. Tangent line to the level curve f(r, h) = metrics.area at (clampedR, metrics.h)
-    // Slope of level curve is -df_dr / df_dh
     const slope = -metrics.gf.r / (metrics.gf.h || 1e-9);
     const dxSpan = 0.42 * rOpt;
     const tanR = [clampedR - dxSpan, clampedR + dxSpan];
     const tanH = [metrics.h - slope * dxSpan, metrics.h + slope * dxSpan];
 
-    // 5. Fixed display-length arrows for grad f and grad g (unit direction * displayLen)
     const arrowLen = 0.48 * rOpt;
     const tipF = {
       r: clampedR + (metrics.gf.r / (metrics.normF || 1)) * arrowLen,
@@ -117,7 +110,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
         mode: "lines",
         x: cR,
         y: cH,
-        line: { color: "#ef4444", width: 3 },
+        line: { color: "#b91c1c", width: 3 },
         name: `Constraint g = ${v0} cm³`,
       },
       {
@@ -125,7 +118,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
         mode: "lines",
         x: levelR,
         y: levelH,
-        line: { color: "#0ea5e9", width: 2.2, dash: "dash" },
+        line: { color: "#0284c7", width: 2.2, dash: "dash" },
         name: `Level curve f = ${metrics.area.toFixed(1)} cm²`,
       },
       {
@@ -133,7 +126,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
         mode: "lines",
         x: tanR,
         y: tanH,
-        line: { color: "#f59e0b", width: 2, dash: "dot" },
+        line: { color: "#b45309", width: 2, dash: "dot" },
         name: "Tangent to level curve",
       },
       {
@@ -142,10 +135,10 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
         x: [rOpt],
         y: [hOpt],
         marker: {
-          color: "#10b981",
+          color: "#047857",
           size: 13,
           symbol: "star",
-          line: { color: "#0f172a", width: 1.5 },
+          line: { color: "#0f172a", width: 1.2 },
         },
         name: `SymPy Optimum (${rOpt.toFixed(2)}, ${hOpt.toFixed(2)})`,
       },
@@ -162,7 +155,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
         mode: "lines",
         x: [clampedR, tipF.r],
         y: [metrics.h, tipF.h],
-        line: { color: "#6366f1", width: 3.5 },
+        line: { color: "#0f766e", width: 3.5 },
         name: "∇f direction (fixed length)",
       },
       {
@@ -170,7 +163,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
         mode: "lines",
         x: [clampedR, tipG.r],
         y: [metrics.h, tipG.h],
-        line: { color: "#10b981", width: 3.5 },
+        line: { color: "#047857", width: 3.5 },
         name: "∇g direction (fixed length)",
       },
     ];
@@ -198,7 +191,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
           arrowhead: 3,
           arrowsize: 1.2,
           arrowwidth: 2.5,
-          arrowcolor: "#6366f1",
+          arrowcolor: "#0f766e",
         },
         {
           x: tipG.r,
@@ -213,7 +206,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
           arrowhead: 3,
           arrowsize: 1.2,
           arrowwidth: 2.5,
-          arrowcolor: "#10b981",
+          arrowcolor: "#047857",
         },
       ],
     };
@@ -226,26 +219,23 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
     setRadius(Number(nextR.toFixed(3)));
   };
 
-  if (loading && !solution) {
+  if (!solution) {
     return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-        Waiting for SymPy optimum before initializing Tangency Demo...
-      </div>
+      <EngineWaitingSkeleton
+        title={loading ? "Initializing Tangency Demo…" : "Waiting for the math engine…"}
+      />
     );
   }
 
-  if (!solution) return null;
-
   return (
     <div className="space-y-6">
-      {/* Control Panel & Alignment Status */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+      <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[#0f172a]">
               Interactive Tangency &amp; Gradient Alignment Demo
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-[#475569] mt-0.5">
               Move <code className="font-mono">r</code> along the constraint curve{" "}
               <code className="font-mono">h = V₀/(πr²)</code> using the slider or by clicking the
               curve. Arrows are drawn at fixed display length so their angle is easy to compare.
@@ -255,7 +245,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
             <button
               type="button"
               onClick={() => setRadius(Number(solution.r_opt.toFixed(4)))}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-white px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0f766e] hover:bg-[#115e59] text-white px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] focus-visible:ring-offset-2 transition-colors"
             >
               <Target className="w-3.5 h-3.5" aria-hidden="true" />
               Jump to optimum
@@ -263,7 +253,7 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
             <button
               type="button"
               onClick={() => setRadius(limits.defaultNonOptimal)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
               Reset
@@ -271,21 +261,21 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
           </div>
         </div>
 
-        {/* Status Banner */}
+        {/* Alignment Status Banner */}
         <div
           role="status"
           aria-live="polite"
           className={`rounded-lg border px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm font-medium ${
             metrics.aligned
-              ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200"
-              : "border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200"
+              ? "border-emerald-200 bg-[#ecfdf5] text-[#047857]"
+              : "border-amber-200 bg-[#fffbeb] text-[#b45309]"
           }`}
         >
           <div className="flex items-center gap-2">
             {metrics.aligned ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+              <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
             ) : (
-              <Compass className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" aria-hidden="true" />
+              <Compass className="w-4 h-4 shrink-0" aria-hidden="true" />
             )}
             <span>
               {metrics.aligned
@@ -293,12 +283,11 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
                 : "Not aligned: area can still decrease along the constraint"}
             </span>
           </div>
-          <span className="text-[11px] font-mono opacity-85">
+          <span className="text-xs font-mono tabular-nums">
             Alignment tolerance: angle ≤ {ALIGNMENT_TOLERANCE_DEG.toFixed(1)}°
           </span>
         </div>
 
-        {/* Shared RangeSlider */}
         <RangeSlider
           id="tangency-r-slider"
           label="Radius r along constraint curve"
@@ -318,49 +307,49 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
 
         {/* Live Metrics Readout */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">Point (r, h)</div>
-            <div className="font-mono font-bold text-xs sm:text-sm mt-0.5">
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">Point (r, h)</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
               ({clampedR.toFixed(3)} cm, {metrics.h.toFixed(3)} cm)
             </div>
           </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">Surface Area f(r, h)</div>
-            <div className="font-mono font-bold text-xs sm:text-sm mt-0.5">
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">Surface Area f(r, h)</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
               {metrics.area.toFixed(3)} cm²
             </div>
           </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">Angle ∠ (∇f, ∇g)</div>
-            <div className="font-mono font-bold text-xs sm:text-sm mt-0.5">
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">Angle ∠ (∇f, ∇g)</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
               {metrics.angleDeg.toFixed(3)}°
             </div>
           </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">2D Cross Product ∇f × ∇g</div>
-            <div className="font-mono font-bold text-xs sm:text-sm mt-0.5">
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">2D Cross Product ∇f × ∇g</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
               {metrics.cross2D.toFixed(2)} cm³
             </div>
           </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">True Magnitude |∇f|</div>
-            <div className="font-mono font-semibold text-xs sm:text-sm mt-0.5">
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">True Magnitude |∇f|</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
               {metrics.normF.toFixed(3)} cm
             </div>
           </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">True Magnitude |∇g|</div>
-            <div className="font-mono font-semibold text-xs sm:text-sm mt-0.5">
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">True Magnitude |∇g|</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
               {metrics.normG.toFixed(3)} cm²
             </div>
           </div>
-          <div className="col-span-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">
+          <div className="col-span-2 rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">
               |∇f| / |∇g| — λ estimate (meaningful when the gradients are parallel)
             </div>
-            <div className="font-mono font-bold text-xs sm:text-sm mt-0.5">
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
               {metrics.lambdaEstimate.toFixed(5)} 1/cm{" "}
-              <span className="font-normal text-[11px] text-slate-500">
+              <span className="font-normal text-xs text-[#475569]">
                 (SymPy λ* = {solution.lambda_opt.toFixed(5)} 1/cm)
               </span>
             </div>
@@ -368,7 +357,6 @@ export function TangencyDemoTab({ v0, solution, loading }: TangencyDemoTabProps)
         </div>
       </div>
 
-      {/* Interactive 2D Plot */}
       <PlotlyChart
         title="Lagrange Tangency Condition in the (r, h) Plane"
         subtitle="Click anywhere on the plot to move r along the red constraint curve. Both gradient arrows use a fixed display length."

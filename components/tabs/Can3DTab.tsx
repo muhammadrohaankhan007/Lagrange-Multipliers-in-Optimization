@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Lightbulb, Pause, Play, RotateCcw, Target } from "lucide-react";
 import { RangeSlider } from "@/components/RangeSlider";
+import { EngineWaitingSkeleton } from "@/components/EngineWaitingSkeleton";
 import {
   getConstraintRadiusLimits,
   heightOnConstraint,
@@ -29,7 +30,6 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
   const [autoRotate, setAutoRotate] = useState<boolean>(false);
   const [resetCounter, setResetCounter] = useState<number>(0);
 
-  // Respect prefers-reduced-motion: default autoRotate OFF if reduced motion is requested
   useEffect(() => {
     if (typeof window !== "undefined") {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -48,7 +48,6 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
     ? ((currentArea - solution.area_min) / solution.area_min) * 100.0
     : 0;
 
-  // Optional 3rd can from Real Cans table, scaled to V0 while preserving h/d ratio
   const scaledRealCan: ScaledRealCan3D | null = useMemo(() => {
     if (!selectedCanId) return null;
     const found = realCans.find((c) => c.id === selectedCanId);
@@ -64,26 +63,23 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
     };
   }, [selectedCanId, realCans, v0]);
 
-  if (loading && !solution) {
+  if (!solution) {
     return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-        Waiting for SymPy optimum before initializing 3D Can viewer...
-      </div>
+      <EngineWaitingSkeleton
+        title={loading ? "Initializing 3D Can viewer…" : "Waiting for the math engine…"}
+      />
     );
   }
 
-  if (!solution) return null;
-
   return (
-    <div className="space-y-5">
-      {/* Controls & Live Readout */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+    <div className="space-y-6">
+      <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[#0f172a]">
               3D Can Explorer Along the Volume Constraint (V₀ = {v0} cm³)
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-[#475569] mt-0.5">
               Drag to orbit, scroll to zoom. Watch how changing radius{" "}
               <code className="font-mono">r</code> stretches or flattens the solid can compared to
               the SymPy optimal outline.
@@ -93,7 +89,7 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
             <button
               type="button"
               onClick={() => setRadius(Number(solution.r_opt.toFixed(4)))}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-white px-3 py-1.5 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0f766e] hover:bg-[#115e59] text-white px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] focus-visible:ring-offset-2 transition-colors"
             >
               <Target className="w-3.5 h-3.5" aria-hidden="true" />
               Jump to optimum
@@ -102,7 +98,7 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
               type="button"
               onClick={() => setAutoRotate((prev) => !prev)}
               aria-pressed={autoRotate}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
             >
               {autoRotate ? (
                 <>
@@ -119,7 +115,7 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
             <button
               type="button"
               onClick={() => setResetCounter((c) => c + 1)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
               Reset view
@@ -127,7 +123,6 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
           </div>
         </div>
 
-        {/* Shared RangeSlider & Optional Real Can Selector */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
           <div className="lg:col-span-2">
             <RangeSlider
@@ -151,7 +146,7 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
           <div>
             <label
               htmlFor="can3d-real-select"
-              className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-xs font-medium text-[#334155] mb-1"
             >
               Optional 3rd Can (from Real Cans table):
             </label>
@@ -159,7 +154,7 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
               id="can3d-real-select"
               value={selectedCanId}
               onChange={(e) => setSelectedCanId(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-2.5 py-2 text-xs text-slate-800 dark:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+              className="w-full rounded-lg border border-[#cbd5e1] bg-white px-2.5 py-2 text-xs text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
             >
               <option value="">None (show Current + Optimal only)</option>
               {realCans.map((c) => (
@@ -172,42 +167,42 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
         </div>
 
         {scaledRealCan && (
-          <p className="text-xs text-slate-600 dark:text-slate-400 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-2">
-            <strong>Scaling note:</strong> &ldquo;{scaledRealCan.name}&rdquo; is scaled to the
-            exact same volume <strong>V₀ = {v0} cm³</strong> while keeping its height-to-diameter
-            ratio (<strong>h/d = {scaledRealCan.hOverD.toFixed(2)}</strong>) → scaled r ={" "}
-            {scaledRealCan.r.toFixed(2)} cm, h = {scaledRealCan.h.toFixed(2)} cm.
+          <p className="text-xs text-[#334155] rounded-lg bg-[#f8fafc] border border-[#e2e8f0] px-3.5 py-2.5">
+            <strong className="text-[#0f172a]">Scaling note:</strong> &ldquo;{scaledRealCan.name}
+            &rdquo; is scaled to the exact same volume <strong>V₀ = {v0} cm³</strong> while keeping
+            its height-to-diameter ratio (<strong>h/d = {scaledRealCan.hOverD.toFixed(2)}</strong>)
+            → scaled r = {scaledRealCan.r.toFixed(2)} cm, h = {scaledRealCan.h.toFixed(2)} cm.
           </p>
         )}
 
-        {/* Live KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">Current Radius r</div>
-            <div className="font-mono font-bold text-sm mt-0.5">{clampedR.toFixed(3)} cm</div>
-          </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">Current Height h</div>
-            <div className="font-mono font-bold text-sm mt-0.5">{currentH.toFixed(3)} cm</div>
-          </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">
-              Current Surface Area
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">Current Radius r</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
+              {clampedR.toFixed(3)} cm
             </div>
-            <div className="font-mono font-bold text-sm mt-0.5">{currentArea.toFixed(2)} cm²</div>
           </div>
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-            <div className="text-[11px] text-slate-600 dark:text-slate-400">
-              Excess Over Optimum
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">Current Height h</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
+              {currentH.toFixed(3)} cm
             </div>
-            <div className="font-mono font-bold text-sm mt-0.5 text-amber-700 dark:text-amber-400">
+          </div>
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">Current Surface Area</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#0f172a] mt-0.5">
+              {currentArea.toFixed(2)} cm²
+            </div>
+          </div>
+          <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-3">
+            <div className="text-xs text-[#475569]">Excess Over Optimum</div>
+            <div className="font-mono tabular-nums font-semibold text-sm text-[#b45309] mt-0.5">
               +{Math.max(0, percentExcess).toFixed(2)}%
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3D Viewport + Takeaway */}
       <figure className="space-y-2">
         <Can3DScene
           targetR={clampedR}
@@ -220,14 +215,12 @@ export function Can3DTab({ v0, solution, realCans, loading }: Can3DTabProps) {
           resetCounter={resetCounter}
           v0={v0}
         />
-        <figcaption className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 px-4 py-2.5 flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
-          <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+        <figcaption className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 flex items-start gap-2 text-xs text-[#334155]">
+          <Lightbulb className="w-3.5 h-3.5 text-[#b45309] shrink-0 mt-0.5" aria-hidden="true" />
           <span>
-            <strong className="font-semibold text-slate-900 dark:text-slate-100">
-              Takeaway:
-            </strong>{" "}
-            Holding volume fixed forces any slimmer or wider cylinder to stretch dramatically in
-            height or width, increasing surface area above the compact h = d optimal outline.
+            <strong className="font-semibold text-[#0f172a]">Takeaway:</strong> Holding volume
+            fixed forces any slimmer or wider cylinder to stretch dramatically in height or width,
+            increasing surface area above the compact h = d optimal outline.
           </span>
         </figcaption>
       </figure>

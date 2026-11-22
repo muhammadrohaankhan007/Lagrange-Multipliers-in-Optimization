@@ -74,7 +74,7 @@ const DEMO_STEPS: {
     title: "Real Cans Comparison",
     tab: "real-cans",
     script:
-      "Real cans are taller than h = d and use roughly 15–22% more surface area due to thicker lids, domed bases, grip ergonomics, and cup-holder sizing.",
+      "Real cans are taller than h = d and use more surface area due to thicker lids, domed bases, grip ergonomics, and cup-holder sizing.",
   },
 ];
 
@@ -99,7 +99,7 @@ const DEMO_EXTRAS: {
     label: "Extra C: 3D Can",
     tab: "can-3d",
     script:
-      "In 3D, you can visually compare the solid can, the optimal wireframe, and a volume-scaled real beverage can side by side.",
+      "In 3D, you can visually compare the solid can, the optimal outline, and a volume-scaled real beverage can side by side.",
   },
 ];
 
@@ -107,12 +107,12 @@ export function DemoGuidePanel({ activeTab, onSelectTab, onClose }: DemoGuidePan
   return (
     <aside
       aria-label="2-Minute Presentation Demo Guide"
-      className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-950/30 p-4 shadow-sm space-y-3"
+      className="rounded-xl border border-[#cbd5e1] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4"
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Presentation className="w-4 h-4 text-amber-700 dark:text-amber-400" aria-hidden="true" />
-          <h2 className="text-sm font-bold text-amber-950 dark:text-amber-100">
+          <Presentation className="w-4 h-4 text-[#0f766e]" aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-[#0f172a]">
             2-Minute Presentation Demo Flow
           </h2>
         </div>
@@ -120,18 +120,18 @@ export function DemoGuidePanel({ activeTab, onSelectTab, onClose }: DemoGuidePan
           type="button"
           onClick={onClose}
           aria-label="Close demo guide"
-          className="p-1 rounded-md text-amber-800 dark:text-amber-300 hover:bg-amber-200/60 dark:hover:bg-amber-900/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+          className="p-1.5 rounded-md text-[#475569] hover:text-[#0f172a] hover:bg-[#f1f5f9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e]"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <p className="text-xs text-amber-900/80 dark:text-amber-200/80">
+      <p className="text-xs text-[#475569]">
         Click any step to jump straight to that tab, and read the suggested one-sentence talking
         point aloud.
       </p>
 
-      <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+      <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {DEMO_STEPS.map((item) => {
           const isCurrent = activeTab === item.tab;
           return (
@@ -139,24 +139,24 @@ export function DemoGuidePanel({ activeTab, onSelectTab, onClose }: DemoGuidePan
               <button
                 type="button"
                 onClick={() => onSelectTab(item.tab)}
-                className={`w-full h-full text-left rounded-lg border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                className={`w-full h-full text-left rounded-lg border p-3.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] ${
                   isCurrent
-                    ? "border-indigo-500 bg-white dark:bg-slate-900 shadow-sm"
-                    : "border-amber-200 dark:border-amber-900/70 bg-white/80 dark:bg-slate-900/70 hover:border-indigo-400"
+                    ? "border-[#0f766e] bg-[#f0fdfa]"
+                    : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#cbd5e1] hover:bg-white"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold text-indigo-700 dark:text-indigo-300">
+                  <span className="text-xs font-semibold text-[#0f766e]">
                     {item.step}. {item.title}
                   </span>
-                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                  <span className="text-[11px] font-mono tabular-nums text-[#475569]">
                     {item.time}
                   </span>
                 </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">
+                <p className="text-xs text-[#334155] mt-1.5 leading-relaxed">
                   &ldquo;{item.script}&rdquo;
                 </p>
-                <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-[#0f766e]">
                   {isCurrent ? "Current tab" : "Open tab"}
                   <ArrowRight className="w-3 h-3" aria-hidden="true" />
                 </div>
@@ -166,11 +166,11 @@ export function DemoGuidePanel({ activeTab, onSelectTab, onClose }: DemoGuidePan
         })}
       </ol>
 
-      <div className="pt-2 border-t border-amber-200 dark:border-amber-900/70 space-y-2">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+      <div className="pt-3 border-t border-[#e2e8f0] space-y-2.5">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#475569]">
           Optional Extras (If Time Permits)
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {DEMO_EXTRAS.map((extra) => {
             const isCurrent = activeTab === extra.tab;
             return (
@@ -178,16 +178,14 @@ export function DemoGuidePanel({ activeTab, onSelectTab, onClose }: DemoGuidePan
                 key={extra.tab}
                 type="button"
                 onClick={() => onSelectTab(extra.tab)}
-                className={`w-full text-left rounded-lg border p-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 ${
+                className={`w-full text-left rounded-lg border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] ${
                   isCurrent
-                    ? "border-teal-600 bg-white dark:bg-slate-900 shadow-sm"
-                    : "border-amber-200 dark:border-amber-900/70 bg-white/80 dark:bg-slate-900/70 hover:border-teal-500"
+                    ? "border-[#0f766e] bg-[#f0fdfa]"
+                    : "border-[#e2e8f0] bg-[#f8fafc] hover:border-[#cbd5e1] hover:bg-white"
                 }`}
               >
-                <div className="text-xs font-bold text-teal-700 dark:text-teal-400">
-                  {extra.label}
-                </div>
-                <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
+                <div className="text-xs font-semibold text-[#0f766e]">{extra.label}</div>
+                <p className="text-xs text-[#334155] mt-1 leading-relaxed">
                   &ldquo;{extra.script}&rdquo;
                 </p>
               </button>

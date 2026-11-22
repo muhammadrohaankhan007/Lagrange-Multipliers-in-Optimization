@@ -4,10 +4,17 @@ import React, { useMemo, useState } from "react";
 import { Download, Info } from "lucide-react";
 import { MathBlock } from "@/components/MathBlock";
 import { PlotlyChart } from "@/components/PlotlyChart";
+import { ResultSummaryStrip } from "@/components/ResultSummaryStrip";
+import { EngineWaitingSkeleton } from "@/components/EngineWaitingSkeleton";
 import { downloadCsv } from "@/lib/csv";
-import type { ShapeComparisonEntry, ShapeComparisonResult } from "@/lib/solver-client";
+import type {
+  AnalyticalSolution,
+  ShapeComparisonEntry,
+  ShapeComparisonResult,
+} from "@/lib/solver-client";
 
 interface ShapeComparisonTabProps {
+  solution: AnalyticalSolution | null;
   comparison: ShapeComparisonResult | null;
   loading: boolean;
 }
@@ -39,7 +46,11 @@ const SPHERE_DISCUSSION_HYPOTHESES = [
   },
 ];
 
-export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabProps) {
+export function ShapeComparisonTab({
+  solution,
+  comparison,
+  loading,
+}: ShapeComparisonTabProps) {
   const allShapes: ShapeComparisonEntry[] = useMemo(() => {
     if (!comparison) return [];
     return [...comparison.closed, ...comparison.open_top];
@@ -110,26 +121,33 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
     );
   };
 
-  if (loading && !comparison) {
+  if (!comparison) {
     return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center text-sm text-slate-500">
-        Solving Lagrange systems for all shapes in Pyodide (SymPy)...
-      </div>
+      <EngineWaitingSkeleton
+        title={
+          loading
+            ? "Solving Lagrange systems for all shapes…"
+            : "Waiting for the math engine…"
+        }
+      />
     );
   }
 
-  if (!comparison) return null;
-
   return (
     <div className="space-y-6">
+      <ResultSummaryStrip
+        solution={solution}
+        caption={`Closed cylinder baseline at V₀ = ${comparison.v0} cm³`}
+      />
+
       {/* Header + Fairness Notice */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-3">
+      <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-[#0f172a]">
               Shape Comparison at Fixed Volume V₀ = {comparison.v0} cm³
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+            <p className="text-sm text-[#475569] mt-0.5">
               Each shape is optimized live with SymPy using Lagrange multipliers (∇f = λ∇g,
               g = V₀), except the sphere where V₀ fixes r directly.
             </p>
@@ -137,62 +155,61 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
           <button
             type="button"
             onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[#cbd5e1] bg-white px-3 py-1.5 text-xs font-medium text-[#334155] hover:bg-[#f8fafc] hover:text-[#0f172a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors"
           >
             <Download className="w-3.5 h-3.5" aria-hidden="true" />
             Export CSV
           </button>
         </div>
 
-        <div className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-          <Info className="w-4 h-4 text-teal-700 dark:text-teal-400 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] px-4 py-3 flex items-start gap-2.5 text-xs text-[#334155]">
+          <Info className="w-4 h-4 text-[#0f766e] shrink-0 mt-0.5" aria-hidden="true" />
           <p>
-            <strong>Fair comparison rule:</strong> Closed shapes (fully sealed containers) and
-            open-top shapes (missing a lid) solve different optimization problems. They are grouped
-            separately below and <strong>never ranked against each other</strong>.
+            <strong className="text-[#0f172a]">Fair comparison rule:</strong> Closed shapes (fully
+            sealed containers) and open-top shapes (missing a lid) solve different optimization
+            problems. They are grouped separately below and{" "}
+            <strong className="text-[#0f172a]">never ranked against each other</strong>.
           </p>
         </div>
       </div>
 
       {/* Group 1: Closed Shapes Table */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+      <div className="rounded-xl border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-[#e2e8f0] flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-[#0f172a]">
             Group 1: Closed Shapes (Ranked Against Sphere Baseline)
           </h3>
-          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-mono tabular-nums text-[#475569]">
             V₀ = {comparison.v0} cm³
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+            <thead className="sticky top-0 z-10 bg-[#f8fafc] border-b border-[#e2e8f0] text-[#334155]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Shape</th>
                 <th className="px-4 py-3 font-semibold font-mono">Optimal Dimensions (cm)</th>
-                <th className="px-4 py-3 font-semibold font-mono">Minimum Area (cm²)</th>
-                <th className="px-4 py-3 font-semibold font-mono">Area / Sphere</th>
+                <th className="px-4 py-3 font-semibold font-mono text-right">
+                  Minimum Area (cm²)
+                </th>
+                <th className="px-4 py-3 font-semibold font-mono text-right">Area / Sphere</th>
                 <th className="px-4 py-3 font-semibold">Derived Optimal Ratios</th>
-                <th className="px-4 py-3 font-semibold font-mono">λ* (1/cm)</th>
+                <th className="px-4 py-3 font-semibold font-mono text-right">λ* (1/cm)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            <tbody className="divide-y divide-[#e2e8f0]">
               {comparison.closed.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                  <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
-                    {s.name}
+                <tr key={s.id} className="even:bg-[#f8fafc] hover:bg-[#f1f5f9]/70">
+                  <td className="px-4 py-3 font-medium text-[#0f172a]">{s.name}</td>
+                  <td className="px-4 py-3 font-mono tabular-nums">{s.dimensions_summary}</td>
+                  <td className="px-4 py-3 font-mono tabular-nums text-right font-semibold text-[#0f766e]">
+                    {s.area_min.toFixed(4)}
                   </td>
-                  <td className="px-4 py-3 font-mono">{s.dimensions_summary}</td>
-                  <td className="px-4 py-3 font-mono font-semibold text-teal-700 dark:text-teal-400">
-                    {s.area_min.toFixed(4)} cm²
-                  </td>
-                  <td className="px-4 py-3 font-mono">
+                  <td className="px-4 py-3 font-mono tabular-nums text-right">
                     {s.ratio_to_sphere !== null ? `${s.ratio_to_sphere.toFixed(4)}×` : "—"}
                   </td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
-                    {s.optimal_ratios}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">
+                  <td className="px-4 py-3 text-[#334155]">{s.optimal_ratios}</td>
+                  <td className="px-4 py-3 font-mono tabular-nums text-right text-[#475569]">
                     {s.lambda_opt !== null ? s.lambda_opt.toFixed(5) : "—"}
                   </td>
                 </tr>
@@ -203,40 +220,38 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
       </div>
 
       {/* Group 2: Open-Top Shapes Table */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+      <div className="rounded-xl border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-[#e2e8f0] flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-[#0f172a]">
             Group 2: Open-Top Shapes (Separate Problem — Not Ranked Against Closed Shapes)
           </h3>
-          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+          <span className="text-xs font-mono tabular-nums text-[#475569]">
             V₀ = {comparison.v0} cm³
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[700px] text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+            <thead className="sticky top-0 z-10 bg-[#f8fafc] border-b border-[#e2e8f0] text-[#334155]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Shape</th>
                 <th className="px-4 py-3 font-semibold font-mono">Optimal Dimensions (cm)</th>
-                <th className="px-4 py-3 font-semibold font-mono">Minimum Area (cm²)</th>
+                <th className="px-4 py-3 font-semibold font-mono text-right">
+                  Minimum Area (cm²)
+                </th>
                 <th className="px-4 py-3 font-semibold">Derived Optimal Ratios</th>
-                <th className="px-4 py-3 font-semibold font-mono">λ* (1/cm)</th>
+                <th className="px-4 py-3 font-semibold font-mono text-right">λ* (1/cm)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            <tbody className="divide-y divide-[#e2e8f0]">
               {comparison.open_top.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                  <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
-                    {s.name}
+                <tr key={s.id} className="even:bg-[#f8fafc] hover:bg-[#f1f5f9]/70">
+                  <td className="px-4 py-3 font-medium text-[#0f172a]">{s.name}</td>
+                  <td className="px-4 py-3 font-mono tabular-nums">{s.dimensions_summary}</td>
+                  <td className="px-4 py-3 font-mono tabular-nums text-right font-semibold text-[#0f172a]">
+                    {s.area_min.toFixed(4)}
                   </td>
-                  <td className="px-4 py-3 font-mono">{s.dimensions_summary}</td>
-                  <td className="px-4 py-3 font-mono font-semibold text-slate-900 dark:text-slate-100">
-                    {s.area_min.toFixed(4)} cm²
-                  </td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
-                    {s.optimal_ratios}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-slate-600 dark:text-slate-400">
+                  <td className="px-4 py-3 text-[#334155]">{s.optimal_ratios}</td>
+                  <td className="px-4 py-3 font-mono tabular-nums text-right text-[#475569]">
                     {s.lambda_opt !== null ? s.lambda_opt.toFixed(5) : "—"}
                   </td>
                 </tr>
@@ -246,7 +261,7 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
         </div>
       </div>
 
-      {/* Bar Chart + "Why aren't cans spheres?" Discussion */}
+      {/* Bar Chart + Discussion */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
           <PlotlyChart
@@ -265,33 +280,27 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
           />
         </div>
 
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-3">
+        <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-              Why Aren&apos;t Cans Spheres?
-            </h3>
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <h3 className="text-sm font-semibold text-[#0f172a]">Why Aren&apos;t Cans Spheres?</h3>
+            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#f1f5f9] text-[#475569]">
               Discussion · Hypotheses
             </span>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
+          <p className="text-xs text-[#475569]">
             By the classical isoperimetric inequality, the sphere achieves the smallest surface
             area for a given volume among all closed 3D shapes (confirmed numerically above). The
             practical reasons beverage cans are cylinders instead are engineering{" "}
-            <strong>hypotheses</strong> to discuss:
+            <strong className="text-[#0f172a]">hypotheses</strong> to discuss:
           </p>
           <div className="space-y-2">
             {SPHERE_DISCUSSION_HYPOTHESES.map((item) => (
               <div
                 key={item.title}
-                className="rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5"
+                className="rounded-lg bg-[#f8fafc] border border-[#e2e8f0] p-2.5"
               >
-                <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                  {item.title}
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
-                  {item.body}
-                </p>
+                <div className="text-xs font-semibold text-[#0f172a]">{item.title}</div>
+                <p className="text-xs text-[#475569] mt-0.5 leading-relaxed">{item.body}</p>
               </div>
             ))}
           </div>
@@ -299,13 +308,13 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
       </div>
 
       {/* Step-by-Step Symbolic Derivation Selector */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+      <div className="rounded-xl border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            <h3 className="text-base font-semibold text-[#0f172a]">
               Step-by-Step Lagrange Derivation by Shape (SymPy)
             </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
+            <p className="text-xs text-[#475569]">
               Select any shape to inspect its plain-language SymPy derivation.
             </p>
           </div>
@@ -315,10 +324,10 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
                 key={s.id}
                 type="button"
                 onClick={() => setSelectedShapeId(s.id)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 transition-colors ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f766e] transition-colors ${
                   activeShape?.id === s.id
-                    ? "bg-teal-700 text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    ? "bg-[#0f766e] text-white"
+                    : "bg-[#f1f5f9] text-[#334155] hover:bg-[#e2e8f0]"
                 }`}
               >
                 {s.name}
@@ -332,20 +341,16 @@ export function ShapeComparisonTab({ comparison, loading }: ShapeComparisonTabPr
             {activeShape.steps.map((step) => (
               <div
                 key={step.step_number}
-                className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-4"
+                className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-4"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-teal-700 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-[#0f766e] text-white text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
                     {step.step_number}
                   </div>
                   <div className="min-w-0 flex-1 space-y-2">
-                    <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {step.title}
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300">
-                      {step.explanation}
-                    </p>
-                    <div className="rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2.5">
+                    <div className="text-sm font-semibold text-[#0f172a]">{step.title}</div>
+                    <p className="text-xs text-[#334155]">{step.explanation}</p>
+                    <div className="rounded-md bg-white border border-[#e2e8f0] px-3 py-2.5">
                       <MathBlock latex={step.latex} />
                     </div>
                   </div>

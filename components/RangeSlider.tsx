@@ -12,10 +12,8 @@ export interface RangeSliderProps {
   onChange: (nextValue: number) => void;
   unit?: string;
   unitAria?: string;
-  /** Optional optimum marker position along the track; snaps within 1.5% of range */
   optimumValue?: number;
   optimumLabel?: string;
-  /** Optional secondary text shown inside the right-hand value badge */
   badgeExtra?: string;
   formatValue?: (v: number) => string;
   formatEnd?: (v: number) => string;
@@ -79,7 +77,6 @@ export function RangeSlider({
     let next = parseFloat(e.target.value);
     if (!Number.isFinite(next)) return;
 
-    // Magnetic snap within 1.5% of track range on pointer drags (keep fine keyboard steps free)
     if (hasOptimum && !usingKeyboardRef.current) {
       const snapThreshold = span * 0.015;
       if (Math.abs(next - optimumValue!) <= snapThreshold) {
@@ -109,37 +106,30 @@ export function RangeSlider({
 
   return (
     <div className="space-y-1.5">
-      {/* Label row + monospace value badge */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm">
-        <label htmlFor={id} className="font-medium text-slate-700 dark:text-slate-300">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <label htmlFor={id} className="font-medium text-[#334155]">
           {label}
         </label>
-        <span className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-2 py-0.5 font-mono text-xs font-semibold text-teal-700 dark:text-teal-300">
+        <span className="inline-flex items-center gap-1.5 rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-2.5 py-0.5 font-mono text-xs tabular-nums font-semibold text-[#0f766e]">
           <span>
             {displayVal}
             {unit ? ` ${unit}` : ""}
           </span>
-          {badgeExtra && (
-            <span className="text-slate-500 dark:text-slate-400 font-normal">{badgeExtra}</span>
-          )}
+          {badgeExtra && <span className="text-[#475569] font-normal">{badgeExtra}</span>}
         </span>
       </div>
 
-      {/* Track + optimum tick + native range input (min 32px hit area) */}
       <div className="relative h-8 flex items-center select-none">
-        {/* Background 4px track */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 h-1 rounded-full bg-slate-200 dark:bg-slate-800"
+          className="pointer-events-none absolute inset-x-0 h-1 rounded-full bg-[#e2e8f0]"
         />
-        {/* Filled progress portion */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 h-1 rounded-full bg-[var(--nav-accent)]"
+          className="pointer-events-none absolute left-0 h-1 rounded-full bg-[#0f766e]"
           style={{ width: `${fillPct}%` }}
         />
 
-        {/* Optimum tick mark */}
         {hasOptimum && (
           <div
             aria-hidden="true"
@@ -148,9 +138,7 @@ export function RangeSlider({
           >
             <div
               className={`w-0.5 rounded-full transition-all duration-150 ${
-                snapHighlight || isAtOptimum
-                  ? "h-4 bg-amber-500 scale-y-110"
-                  : "h-2.5 bg-amber-500/80 dark:bg-amber-400/80"
+                snapHighlight || isAtOptimum ? "h-4 bg-[#b45309]" : "h-2.5 bg-[#b45309]/75"
               }`}
             />
           </div>
@@ -173,15 +161,12 @@ export function RangeSlider({
         />
       </div>
 
-      {/* Min / Optimum / Max labels row */}
-      <div className="relative flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400">
+      <div className="relative flex items-center justify-between text-xs font-mono tabular-nums text-[#475569]">
         <span>{displayMin}</span>
         {hasOptimum && (
           <span
             className={`absolute -translate-x-1/2 transition-colors duration-150 ${
-              snapHighlight || isAtOptimum
-                ? "text-amber-600 dark:text-amber-400 font-semibold"
-                : "text-slate-500 dark:text-slate-400"
+              snapHighlight || isAtOptimum ? "text-[#b45309] font-semibold" : "text-[#475569]"
             }`}
             style={{ left: `${Math.min(86, Math.max(14, optPct))}%` }}
           >
