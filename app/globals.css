@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --nav-bg: rgba(248, 250, 252, 0.92);
+  --nav-border: #e2e8f0;
+  --nav-text: #0f172a;
+  --nav-muted: #475569;
+  --nav-accent: #0f766e;
+  --nav-accent-subtle: rgba(15, 118, 110, 0.1);
+}
+
+.dark {
+  --nav-bg: rgba(11, 17, 32, 0.92);
+  --nav-border: #1e293b;
+  --nav-text: #f1f5f9;
+  --nav-muted: #94a3b8;
+  --nav-accent: #2dd4bf;
+  --nav-accent-subtle: rgba(45, 212, 191, 0.12);
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 dark:bg-[#0b1120] dark:text-slate-100 antialiased;
+  }
+}
+
+.katex-display {
+  margin: 0.45rem 0 !important;
+}
+
+/* Hidden scrollbar for horizontal tab bar (replaced by fade edges & chevrons) */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shared precision RangeSlider styling: focus-visible ring on thumb only */
+input[type="range"].can-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  outline: none;
+}
+
+input[type="range"].can-slider:focus {
+  outline: none;
+}
+
+input[type="range"].can-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+  border-radius: 9999px;
+}
+
+input[type="range"].can-slider::-moz-range-track {
+  height: 4px;
+  background: transparent;
+  border-radius: 9999px;
+}
+
+input[type="range"].can-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--nav-accent);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.22);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.dark input[type="range"].can-slider::-webkit-slider-thumb {
+  background: #0f172a;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
+}
+
+input[type="range"].can-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--nav-accent);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.22);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.dark input[type="range"].can-slider::-moz-range-thumb {
+  background: #0f172a;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
+}
+
+input[type="range"].can-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.06);
+}
+input[type="range"].can-slider:hover::-moz-range-thumb {
+  transform: scale(1.06);
+}
+
+/* Focus-visible ring ONLY on the thumb, never a box around the whole slider */
+input[type="range"].can-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px var(--nav-accent-subtle), 0 0 0 5px var(--nav-accent);
+}
+input[type="range"].can-slider:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px var(--nav-accent-subtle), 0 0 0 5px var(--nav-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  input[type="range"].can-slider::-webkit-slider-thumb,
+  input[type="range"].can-slider::-moz-range-thumb {
+    transition: none;
+  }
+}
