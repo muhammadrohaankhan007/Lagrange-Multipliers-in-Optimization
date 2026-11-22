@@ -1,2 +1,0 @@
-"""CanOptimizer backend package."""
-
